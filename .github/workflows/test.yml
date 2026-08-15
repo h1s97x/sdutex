@@ -2,8 +2,22 @@ name: Test
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'Makefile'
+      - 'build.lua'
+      - '.github/tl_packages'
+      - '.github/workflows/test.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'Makefile'
+      - 'build.lua'
+      - '.github/tl_packages'
+      - '.github/workflows/test.yml'
   workflow_dispatch:
 
 jobs:

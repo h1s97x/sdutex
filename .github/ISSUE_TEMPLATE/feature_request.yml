@@ -1,0 +1,50 @@
+name: Feature Request / 功能建议
+description: Suggest a new feature or improvement / 建议新功能或改进
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your idea! Please describe the feature you would like to see.
+        感谢分享你的想法！请描述你希望看到的功能。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / 相关痛点
+      description: Is your feature request related to a problem? Describe it here. / 该功能是否与某个问题相关？请在此描述。
+      placeholder: "I'm always frustrated when ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution / 建议方案
+      description: Describe the feature and how it should behave / 描述该功能及其预期行为
+      placeholder: "It would be great if the template could ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered / 备选方案
+      description: Any alternative solutions you've considered / 你考虑过的替代方案
+      placeholder: "Alternatively, the template could ..."
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case / 使用场景
+      description: Who would benefit and in which scenario? / 谁会在什么场景下受益？
+      placeholder: "Students who want to ..."
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Verification / 确认
+      description: Please confirm before submitting / 提交前请确认
+      options:
+        - label: I have searched existing issues and this is not a duplicate / 我已搜索过现有 Issue，此功能未被提出过
+          required: true

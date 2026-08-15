@@ -1,0 +1,74 @@
+name: Bug Report / Bug 报告
+description: Report a problem with the template / 报告模板的问题
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the form below to help us reproduce and fix it quickly.
+        感谢报告 Bug！请填写以下表单，帮助我们快速复现并修复。
+
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version / 宏包版本
+      description: Which version of the template are you using? (e.g. `v1.0.0`, `main`) / 你使用的是哪个版本？
+      placeholder: "main"
+    validations:
+      required: true
+
+  - type: input
+    id: tex-distribution
+    attributes:
+      label: TeX distribution / TeX 发行版
+      description: TeX Live or MiKTeX? Which version? / 使用 TeX Live 还是 MiKTeX？版本号？
+      placeholder: "TeX Live 2024"
+    validations:
+      required: true
+
+  - type: input
+    id: compiler
+    attributes:
+      label: Compiler / 编译引擎
+      description: Which engine do you use? (e.g. XeLaTeX) / 使用哪个编译引擎？
+      placeholder: "XeLaTeX"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce / 复现步骤
+      description: Describe the minimal example and steps / 描述最小示例与复现步骤
+      placeholder: |
+        1. Copy the following minimal example into a `.tex` file
+        2. Compile with XeLaTeX
+        3. Observe the error / wrong output
+      validations:
+        required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Error log / 错误日志
+      description: Paste the relevant log output or error message / 粘贴相关日志输出或错误信息
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior / 预期行为
+      description: What did you expect to happen? / 你期望发生什么？
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Verification / 确认
+      description: Please confirm before submitting / 提交前请确认
+      options:
+        - label: I have searched existing issues for the same problem / 我已搜索过现有 Issue，确认没有相同问题
+          required: true

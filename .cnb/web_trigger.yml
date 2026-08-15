@@ -1,15 +1,12 @@
-# 页面手动触发按钮：同步到 GitHub / 从 GitHub 拉取
-# 按钮权限限制为仓库 owner / master / developer，避免普通成员误触发同步。
+# 手动触发的 Web Trigger 按钮配置
+# 从 GitHub 拉取：将 GitHub 远端最新提交拉取到 CNB 仓库（GitHub → CNB）
+# 使用官方 tencentcom/git-sync 插件 + sync_mode: pull（Pull 模式），见 .cnb.yml。
+# 按钮在仓库任意分支均可触发，事件名与 .cnb.yml 中 $ 兜底分支下的 web_trigger 流水线对应。
 branch:
-  - reg: ^main
+  - reg: .*
     buttons:
-      - name: 同步到 GitHub
-        description: 将当前 main 分支同步到 GitHub 仓库（CNB → GitHub）
-        event: web_trigger_sync_github
-        permissions:
-          roles: [owner, master, developer]
-      - name: GitHub 拉取
-        description: 从 GitHub 拉取最新提交并更新 CNB 对应分支（GitHub → CNB）
+      - name: 从 GitHub 拉取
+        description: 从 GitHub 远端拉取最新提交到当前分支（GitHub → CNB）
         event: web_trigger_pull_from_github
         permissions:
           roles: [owner, master, developer]
