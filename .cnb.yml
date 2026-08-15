@@ -1,0 +1,31 @@
+# 公共同步逻辑：YAML 锚点复用，避免自动/手动两套脚本重复
+.sync-to-github: &sync-to-github
+  imports:
+    - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
+  stages:
+    - name: sync-to-github
+      script: |
+        set -e
+        git config --global user.name "CNB Sync"
+        git config --global user.email "cnb@cnb.cool"
+
+        REMOTE="github"
+        # 移除并重建 remote，确保 URL 干净、不含 token
+        git remote remove "$REMOTE" 2>/dev/null || true
+        git remote add "$REMOTE" https://github.com/h1s97x/sdutex.git
+
+        # 通过 http.extraHeader 注入凭证，避免 GITHUB_TOKEN 写入 .git/config
+        AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+        # 普通推送（不用 --force），避免覆盖 GitHub 端分叉历史
+        git -c "http.extraHeader=AUTHORIZATION: basic ${AUTH}" \
+          push "$REMOTE" "HEAD:refs/heads/main"
+
+# main 分支 push 自动同步到 GitHub
+main:
+  push:
+    - <<: *sync-to-github
+
+# $ 兜底分支：手动 web_trigger 同步到 GitHub
+$:
+  web_trigger_sync_github:
+    - <<: *sync-to-github
