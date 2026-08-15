@@ -70,12 +70,16 @@ sduthesis.dtx
 \g_@@_title_tl          % 中文标题
 \g_@@_title_en_tl       % 英文标题
 \g_@@_author_tl          % 作者
+\g_@@_author_en_tl       % 英文作者
 \g_@@_student_id_tl     % 学号
 \g_@@_school_tl          % 学院
 \g_@@_major_tl           % 专业
+\g_@@_major_en_tl        % 英文专业
 \g_@@_supervisor_tl      % 导师
 \g_@@_supervisor_title_tl % 导师职称
+\g_@@_supervisor_en_tl   % 英文导师
 \g_@@_co_supervisor_tl  % 合作导师
+\g_@@_co_supervisor_en_tl % 英文合作导师
 \g_@@_date_tl            % 日期
 \g_@@_cn_keywords_tl     % 中文关键词
 \g_@@_en_keywords_tl     % 英文关键词
@@ -197,13 +201,16 @@ sduthesis.dtx
 
 | 宏包 | 用途 |
 |------|------|
-| `ctexbook` | 中文支持 |
+| `ctexbook` | 中文支持（基础类） |
 | `geometry` | 页面布局 |
 | `fancyhdr` | 页眉页脚 |
 | `graphicx` | 图形 |
 | `amsmath` | 数学公式 |
+| `amssymb` | 数学符号 |
+| `amsthm` | 定理环境 |
 | `hyperref` | 超链接 |
-| `gbt7714` | 参考文献 |
+| `xeCJKfntef` | 中文字形标注 |
+| `sduthesis.bst` | 参考文献样式（自定义） |
 
 ## 版本历史
 

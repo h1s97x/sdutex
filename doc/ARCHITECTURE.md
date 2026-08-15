@@ -47,17 +47,14 @@
 
 | 变量名 | 类型 | 说明 |
 |--------|------|------|
-| `g__sdut_degree_int` | int | 学位类型 |
-| `g__sdut_language_str` | str | 语言设置 |
-| `g__sdut_blind_bool` | bool | 盲审模式 |
+| `g_@@_type_int` | int | 学位类型 |
+| `g_@@_blind_bool` | bool | 盲审模式 |
+| `g_@@_twoside_bool` | bool | 双面打印 |
+| `g_@@_title_tl` | tl | 论文中文标题 |
+| `g_@@_author_tl` | tl | 作者姓名 |
+| `g_@@_supervisor_tl` | tl | 导师姓名 |
 
-#### 临时变量
-
-| 变量名 | 类型 | 说明 |
-|--------|------|------|
-| `l__sdut_title_tl` | tl | 论文标题 |
-| `l__sdut_author_tl` | tl | 作者姓名 |
-| `l__sdut_value_tl` | tl | 临时值存储 |
+> 注：`@@` 为内部命名空间前缀 `sdu`（参见 `doc/INTERNALS.md`）。
 
 ### 2. 配置系统
 
@@ -81,7 +78,8 @@
 |------|---|------|
 | bachelor | 1 | 本科毕业论文 |
 | master | 2 | 硕士学位论文 |
-| doctor | 3 | 博士学位论文 |
+| professional | 3 | 专业型硕士学位论文 |
+| doctor | 4 | 博士学位论文 |
 
 ### 4. 语言支持
 
@@ -144,12 +142,13 @@
 工具宏包，提供辅助功能：
 
 1. **数学工具**
-   - 数集符号
-   - 定理环境
+   - 数集符号（`\SDUTN` / `\SDUTZ` / `\SDUTQ` / `\SDUTR` / `\SDUTC`）
+   - 公式引用（`\SDUT@eqref`）
+   - 定理环境增强（`\SDUT@begintheorem`）
 
 2. **浮动体工具**
    - 间距控制
-   - 图表辅助
+   - 图片宏包设置
 
 3. **格式工具**
    - 段落格式
@@ -211,12 +210,6 @@
 提供可扩展的钩子：
 
 ```latex
-% 封面渲染前
-\AtBeginCoverpage
-
-% 封面渲染后
-\AtEndCoverpage
-
 % 文档初始化后
 \AtBeginDocument
 
@@ -229,18 +222,24 @@
 以 `@` 结尾的命令为私有命令：
 
 ```latex
-\SDUT@private_command:
+\@@_make_cover_bachelor:
+\@@_make_cover_graduate:
+\@@_cover_entry:nn
 ```
 
-### 继承与覆盖
+### 用户接口
 
-用户可以通过重定义覆盖默认样式：
+用户通过 `\SDUSetup` 配置选项，通过 `\MakeCover` / `\MakeDeclaration` 生成页面：
 
 ```latex
-% 覆盖封面标题样式
-\RenewDocumentCommand \SDUT@CoverTitle { } {
-  % 自定义样式
+% 配置封面信息
+\SDUSetup{
+  title = {...},
+  author = {...}
 }
+
+% 生成封面
+\MakeCover
 ```
 
 ## 性能考虑
@@ -279,7 +278,7 @@
 
 ## 未来规划
 
-1. **v0.2**：增加研究生模板支持
-2. **v0.3**：增加盲审模式
-3. **v0.4**：完善测试覆盖
-4. **v1.0**：发布 CTAN
+1. **v1.1**：增加参考文献多语言混排优化
+2. **v1.2**：增加在线模板生成工具
+3. **v1.3**：完善测试覆盖
+4. **v1.0**：发布 CTAN（已完成）

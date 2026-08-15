@@ -6,7 +6,7 @@
 %% 使用方式：
 %% \bibliographystyle{sduthesis}
 %%
-%%\ProvidesFile{sduthesis.bst}[2024/01/01 SDU Thesis Bibliography Style]
+%%\ProvidesFile{sduthesis.bst}[2024/12/01 1.0.0 SDU Thesis Bibliography Style]
 
 ENTRY
   { address

@@ -25,11 +25,13 @@
 %% - format   : 加载格式工具
 %% - all      : 加载所有工具
 %%
-%%\NeedsTeXFormat{LaTeX2e}
-%%\ProvidesPackage{sdutex}[2024/01/01 SDU LaTeX Tool Package]
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{sdutex}[2024/12/01 1.0.0 SDU LaTeX Tool Package]
 
 \RequirePackage{expl3}
 \RequirePackage{l3keys2e}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
 
 %% ============================================================
 %% 宏包选项定义
@@ -68,23 +70,23 @@
 \bool_if:NT \g__sdut_math_bool {
   
   % 数学符号宏
-  \cs_new:Npn \@SDUT@的自然数集 {\mathbb{N}}
-  \cs_new:Npn \@SDUT@的整数集 {\mathbb{Z}}
-  \cs_new:Npn \@SDUT@的有理数集 {\mathbb{Q}}
-  \cs_new:Npn \@SDUT@的实数集 {\mathbb{R}}
-  \cs_new:Npn \@SDUT@的复数集 {\mathbb{C}}
+  \cs_new:Npn \SDUT@natural_set {\mathbb{N}}
+  \cs_new:Npn \SDUT@integer_set {\mathbb{Z}}
+  \cs_new:Npn \SDUT@rational_set {\mathbb{Q}}
+  \cs_new:Npn \SDUT@real_set {\mathbb{R}}
+  \cs_new:Npn \SDUT@complex_set {\mathbb{C}}
   
   % 用户级接口
   \cs_new:Npn \SDUT@mathbb #1 {
-    \text{\USEInstance{mathbb}{#1}}
+    \text{\mathbb{#1}}
   }
   
-  % 短命令：数集
-  \cs_set:Npn \N {\@SDUT@的自然数集}
-  \cs_set:Npn \Z {\@SDUT@的整数集}
-  \cs_set:Npn \Q {\@SDUT@的有理数集}
-  \cs_set:Npn \R {\@SDUT@的实数集}
-  \cs_set:Npn \C {\@SDUT@的复数集}
+  % 安全前缀短命令：数集（避免覆盖 LaTeX 常用控制序列）
+  \cs_new:Npn \SDUTN {\SDUT@natural_set}
+  \cs_new:Npn \SDUTZ {\SDUT@integer_set}
+  \cs_new:Npn \SDUTQ {\SDUT@rational_set}
+  \cs_new:Npn \SDUTR {\SDUT@real_set}
+  \cs_new:Npn \SDUTC {\SDUT@complex_set}
   
   % 带编号的公式引用
   \cs_new:Npn \SDUT@eqref #1 {
@@ -223,13 +225,13 @@
 %% 版本信息
 %% ============================================================
 
-\tl_const:Nn \c__sdut_version_tl { 0.1.0 }
-\tl_const:Nn \c__sdut_date_tl { 2024/01/01 }
+\tl_const:Nn \c__sdut_version_tl { 1.0.0 }
+\tl_const:Nn \c__sdut_date_tl { 2024/12/01 }
 
 \msg_new:nnn { sdutex } { version } {
   SDUTeX~v\c__sdut_version_tl\\
   山东大学~LaTeX~工具宏包\\
-  Updated:~2014/\c__sdut_date_tl
+  Updated:~\c__sdut_date_tl
 }
 
 %% 调试模式输出版本信息

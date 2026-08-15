@@ -200,7 +200,7 @@ l3build check
 1. 更新版本号：
    ```bash
    # 在 sduthesis.dtx 中更新
-   \ProvidesClass{sduthesis}[2024/01/01 v1.0.0]
+   \ProvidesClass{sduthesis}[2024/12/01 1.0.0 Shandong University Thesis Template]
    ```
 
 2. 更新 CHANGELOG.md
