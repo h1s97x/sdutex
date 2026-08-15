@@ -43,17 +43,20 @@ l3build install
 ```latex
 \documentclass[degree=bachelor]{sduthesis}
 
-\title{基于深度学习的图像识别研究}
-\author{张三}
-\school{计算机科学与技术学院}
-\major{计算机科学与技术}
-\studentid{2021001234}
-\supervisor{李教授}
+\SDUSetup{
+  title = {基于深度学习的图像识别研究},
+  author = {张三},
+  school = {计算机科学与技术学院},
+  major = {计算机科学与技术},
+  student-id = {2021001234},
+  supervisor = {李教授},
+  date = {2025年6月}
+}
 
 \begin{document}
 
 % 生成封面
-\makecover
+\MakeCover
 
 % 中文摘要
 \begin{cnabstract}
@@ -74,6 +77,28 @@ This paper studies image recognition methods based on deep learning...
 
 \end{document}
 ```
+
+## 旧式命令兼容
+
+为了向后兼容，以下旧式命令仍可使用（推荐使用 `\SDUSetup` 现代化接口）：
+
+| 旧式命令 | 等价新写法 | 说明 |
+|----------|-----------|------|
+| `\title{...}` | `\SDUSetup{title={...}}` | 中文标题 |
+| `\title*{...}` | `\SDUSetup{title*={...}}` | 英文标题 |
+| `\author{...}` | `\SDUSetup{author={...}}` | 作者 |
+| `\author*{...}` | `\SDUSetup{author*={...}}` | 英文作者 |
+| `\degree{...}` | 文档类选项 `degree=` | 学位类型 |
+| `\school{...}` | `\SDUSetup{school={...}}` | 学院 |
+| `\major{...}` | `\SDUSetup{major={...}}` | 专业 |
+| `\supervisor{...}` | `\SDUSetup{supervisor={...}}` | 导师 |
+| `\date{...}` | `\SDUSetup{date={...}}` | 日期 |
+| `\studentid{...}` | `\SDUSetup{student-id={...}}` | 学号 |
+| `\makecover` | `\MakeCover` | 生成封面（小写已弃用） |
+| `\makedeclaration` | `\MakeDeclaration` | 生成声明页（小写已弃用） |
+| `\language{...}` | 无（按内容自动判断） | 已弃用，保留以兼容旧文档 |
+
+> **注意**：旧式命令（除 `\makecover`/`\makedeclaration` 外）已标记为**弃用**，新文档请统一使用 `\SDUSetup` + `\MakeCover`/`\MakeDeclaration` 现代化接口。
 
 ## 目录结构
 

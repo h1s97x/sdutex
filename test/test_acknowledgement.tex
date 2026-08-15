@@ -1,11 +1,10 @@
 % test_acknowledgement.tex - 致谢测试
 % 测试致谢环境
-\documentclass{sduthesis}
-\usepackage{test_bib}
+\documentclass[degree=bachelor]{sduthesis}
 \begin{document}
 
 % 封面
-\makecover
+\MakeCover
 
 % 目录
 \tableofcontents
@@ -26,6 +25,7 @@
 \end{acknowledgement}
 
 % 参考文献
-\printbibliography
+\nocite{*}
+\bibliography{test_bib}
 
 \end{document}

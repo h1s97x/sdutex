@@ -23,14 +23,26 @@ test:
 	@cp src/sduthesis.ins build/test/
 	@cp src/sduthesis.dtx build/test/
 	@cp test/test_*.tex build/test/
+	@cp test/test_*.bib build/test/ 2>/dev/null || true
 	@cp src/sdutex.sty build/test/ 2>/dev/null || true
+	@cp src/sduthesis.bst build/test/ 2>/dev/null || true
 	@cd build/test && xelatex sduthesis.ins > /dev/null 2>&1
 	@cd build/test && xelatex sduthesis.dtx > /dev/null 2>&1
-	@cd build/test && for f in test_*.tex; do \
+	@cd build/test && FAILED=0; \
+	for f in test_*.tex; do \
 		name=$$(basename $$f .tex); \
 		echo "=== 测试: $$name ==="; \
-		xelatex -interaction=nonstopmode -halt-on-error -output-directory=. $$f > /dev/null 2>&1 || echo "  失败: $$name"; \
-	done
+		if xelatex -interaction=nonstopmode -halt-on-error -output-directory=. $$f > /dev/null 2>&1; then \
+			echo "  OK: $$name"; \
+		else \
+			echo "  失败: $$name"; \
+			FAILED=1; \
+		fi; \
+	done; \
+	if [ $$FAILED -ne 0 ]; then \
+		echo "存在编译失败，测试未通过"; \
+		exit 1; \
+	fi
 	@echo "测试完成"
 	@ls -la build/test/*.pdf 2>/dev/null | wc -l | xargs -I {} echo "生成 {} 个 PDF"
 

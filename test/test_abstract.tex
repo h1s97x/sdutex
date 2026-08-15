@@ -5,27 +5,23 @@
 %% 使用方法：xelatex test_abstract.tex
 %%
 
-\documentclass{sduthesis}
-
-% 论文类型：bachelor | master | doctor
-\degree{bachelor}
-\language{chinese}
+\documentclass[degree=bachelor]{sduthesis}
 
 \begin{document}
 
 % 中文摘要
-\begin{abstract}
+\begin{cnabstract}
 这是中文摘要的测试内容。
 
 本文主要研究了\ldots
-\end{abstract}
+\end{cnabstract}
 
 % 英文摘要
-\begin{englishabstract}
+\begin{enabstract}
 This is the English abstract test content.
 
 This paper mainly studies \ldots
-\end{englishabstract}
+\end{enabstract}
 
 \tableofcontents
 

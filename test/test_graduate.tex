@@ -1,27 +1,26 @@
 % test_graduate.tex - 研究生封面测试
 % 测试研究生论文封面（硕士/博士）
-\documentclass[type=master, professional]{sduthesis}
+\documentclass[degree=master, professional]{sduthesis}
 
-\title{基于深度学习的图像识别方法研究}
-\title*{Research on Image Recognition Methods Based on Deep Learning}
-
-\author{张三}
-\author*{San Zhang}
-
-\school{计算机科学与技术学院}
-\major{计算机科学与技术}
-\major*{Computer Science and Technology}
-
-\supervisor{李四教授}
-\supervisor-title{教授}
-\supervisor*{Prof. Si Li}
-
-\date{2024年6月}
+\SDUSetup{
+  title = {基于深度学习的图像识别方法研究},
+  title* = {Research on Image Recognition Methods Based on Deep Learning},
+  author = {张三},
+  author* = {San Zhang},
+  school = {计算机科学与技术学院},
+  major = {计算机科学与技术},
+  major* = {Computer Science and Technology},
+  supervisor = {李四教授},
+  supervisor-title = {教授},
+  supervisor* = {Prof. Si Li},
+  keywords = {深度学习；图像识别；卷积神经网络；特征提取},
+  date = {2024年6月}
+}
 
 \begin{document}
 
 % 生成封面
-\makecover
+\MakeCover
 
 % 中文摘要
 \begin{cnabstract}
@@ -41,16 +40,14 @@
   Experimental results show that our method outperforms existing methods in accuracy.
 \end{enabstract}
 
-% 关键词
-\keywords{深度学习；图像识别；卷积神经网络；特征提取}
-
 \tableofcontents
 
 \chapter{引言}
 本文研究了基于深度学习的图像识别方法。
 
-\printbibliography
+\nocite{*}
+\bibliography{test_bib}
 
-\makedeclaration
+\MakeDeclaration
 
 \end{document}

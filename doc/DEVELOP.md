@@ -159,8 +159,7 @@ src/
 在 `test/` 目录下创建测试文件：
 
 ```latex
-\documentclass{../src/sduthesis}
-\degree{bachelor}
+\documentclass[degree=bachelor]{sduthesis}
 
 \begin{document}
 % 测试内容

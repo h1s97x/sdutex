@@ -1,11 +1,10 @@
 % test_appendix.tex - 附录测试
 % 测试附录环境
-\documentclass{sduthesis}
-\usepackage{test_bib}
+\documentclass[degree=bachelor]{sduthesis}
 \begin{document}
 
 % 封面
-\makecover
+\MakeCover
 
 % 目录
 \tableofcontents
@@ -24,6 +23,7 @@
 这是附录B的内容。
 
 % 参考文献
-\printbibliography
+\nocite{*}
+\bibliography{test_bib}
 
 \end{document}

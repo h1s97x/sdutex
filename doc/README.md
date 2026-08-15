@@ -51,20 +51,23 @@ l3build install
 ```latex
 \documentclass[degree=bachelor]{sduthesis}
 
-\title{你的论文题目}
-\author{你的姓名}
-\school{你的学院}
-\major{你的专业}
-\studentid{你的学号}
-\supervisor{你的导师}
+\SDUSetup{
+  title = {你的论文题目},
+  author = {你的姓名},
+  school = {你的学院},
+  major = {你的专业},
+  student-id = {你的学号},
+  supervisor = {你的导师},
+  date = {2025年6月}
+}
 
 \begin{document}
 
-\makecover
+\MakeCover
 
-\begin{abstract}
+\begin{cnabstract}
 摘要内容...
-\end{abstract}
+\end{cnabstract}
 
 \tableofcontents
 

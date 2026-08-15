@@ -1,21 +1,21 @@
 % test_blind.tex - 盲审模式测试
 % 测试盲审模式下信息隐藏功能
-\documentclass[type=bachelor, blind=true]{sduthesis}
+\documentclass[degree=bachelor, blind=true]{sduthesis}
 
-\title{基于机器学习的数据分析方法研究}
-\title*{Research on Data Analysis Methods Based on Machine Learning}
-
-\author{张三}
-\school{计算机科学与技术学院}
-\major{软件工程}
-\supervisor{李四教授}
-
-\date{2024年6月}
+\SDUSetup{
+  title = {基于机器学习的数据分析方法研究},
+  title* = {Research on Data Analysis Methods Based on Machine Learning},
+  author = {张三},
+  school = {计算机科学与技术学院},
+  major = {软件工程},
+  supervisor = {李四教授},
+  date = {2024年6月}
+}
 
 \begin{document}
 
 % 生成封面
-\makecover
+\MakeCover
 
 % 中文摘要
 \begin{cnabstract}
@@ -30,8 +30,9 @@
 
 % 盲审模式下，作者和导师姓名应该被隐藏显示为 *** 或 ███
 
-\printbibliography
+\nocite{*}
+\bibliography{test_bib}
 
-\makedeclaration
+\MakeDeclaration
 
 \end{document}

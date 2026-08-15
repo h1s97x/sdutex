@@ -17,6 +17,7 @@ knuth-local
 # CJK / Chinese
 ctex
 xecjk
+xeCJKfntef
 cjk
 cjkpunct
 zhnumber
@@ -63,6 +64,7 @@ listings
 subfig
 caption
 environ
+mwe
 
 # doc driver (ctxdoc / l3doc) deps
 hologo

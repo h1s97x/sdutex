@@ -238,6 +238,14 @@
 \ProcessKeysOptions { sdu / option }
 %    \end{macrocode}
 %%
+%% Legacy command to set the degree type.
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \degree { m } {
+  \keys_set:nn { sdu / option } { degree = {#1} }
+}
+%    \end{macrocode}
+%%
 %% ===================================================================
 %% Load Base Class
 %% ===================================================================
@@ -268,12 +276,14 @@
 \RequirePackage { hyperref }
 \RequirePackage { amsmath }
 \RequirePackage { amssymb }
+\RequirePackage { amsthm }
 \RequirePackage { bm }
 \RequirePackage { algorithmicx }
 \RequirePackage { algorithm }
 \RequirePackage { listings }
 \RequirePackage { xcolor }
 \RequirePackage { setspace }
+\RequirePackage { xeCJKfntef }
 %    \end{macrocode}
 %%
 %% ===================================================================
@@ -323,6 +333,23 @@
 %    \end{macrocode}
 %%
 %% ===================================================================
+%% Theorem Environments
+%% ===================================================================
+%%
+%% \subsection{Theorem Environments}
+%%
+%% Define standard theorem-like environments.
+%%    \begin{macrocode}
+%<!CLASS>
+\newtheorem{definition}{定义}
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{引理}
+\newtheorem{corollary}{推论}
+\newtheorem{proposition}{命题}
+% 使用 amsthm 内置的 proof 环境
+%    \end{macrocode}
+%%
+%% ===================================================================
 %% User Setup Interface
 %% ===================================================================
 %%
@@ -358,6 +385,32 @@
 \NewDocumentCommand \SDUSetup { m } {
   \keys_set:nn { sdu / setup } {#1}
 }
+%    \end{macrocode}
+%% \end{function}
+%%
+%% \begin{function}{\SDUSetup, legacy commands}
+%% Legacy compatibility aliases for the old interface.
+%% These commands map to the modern setup keys.
+%%    \begin{macrocode}
+%<!CLASS>
+% \DeclareDocumentCommand 用于重定义 LaTeX/ctexbook 内核命令，
+% 比 \RenewDocumentCommand 更宽松，兼容严格模式。
+\DeclareDocumentCommand \title { m } { \keys_set:nn { sdu / setup } { title = {#1} } }
+\DeclareDocumentCommand \title* { m } { \keys_set:nn { sdu / setup } { title* = {#1} } }
+\DeclareDocumentCommand \author { m } { \keys_set:nn { sdu / setup } { author = {#1} } }
+\DeclareDocumentCommand \author* { m } { \keys_set:nn { sdu / setup } { author* = {#1} } }
+\NewDocumentCommand \school { m } { \keys_set:nn { sdu / setup } { school = {#1} } }
+\NewDocumentCommand \major { m } { \keys_set:nn { sdu / setup } { major = {#1} } }
+\NewDocumentCommand \major* { m } { \keys_set:nn { sdu / setup } { major* = {#1} } }
+\NewDocumentCommand \supervisor { m } { \keys_set:nn { sdu / setup } { supervisor = {#1} } }
+\NewDocumentCommand \supervisor* { m } { \keys_set:nn { sdu / setup } { supervisor* = {#1} } }
+\NewDocumentCommand \cosupervisor { m } { \keys_set:nn { sdu / setup } { co-supervisor = {#1} } }
+\NewDocumentCommand \cosupervisor* { m } { \keys_set:nn { sdu / setup } { co-supervisor* = {#1} } }
+\DeclareDocumentCommand \date { m } { \keys_set:nn { sdu / setup } { date = {#1} } }
+\NewDocumentCommand \studentid { m } { \keys_set:nn { sdu / setup } { student-id = {#1} } }
+\NewDocumentCommand \keywords { m } { \keys_set:nn { sdu / setup } { keywords = {#1} } }
+\NewDocumentCommand \keywords* { m } { \keys_set:nn { sdu / setup } { keywords* = {#1} } }
+\DeclareDocumentCommand \language { m } { }
 %    \end{macrocode}
 %% \end{function}
 %%
@@ -414,13 +467,23 @@
     \begin{center}
       \vspace*{5mm}
 
-      % University logo
-      \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      % University logo (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_logo}{
+        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      }{
+        \vspace*{2cm}
+        \zihao{1} \bfseries \hei { 山东大学 }
+      }
 
       \vspace*{10mm}
 
-      % Title image
-      \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      % Title image (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_title}{
+        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      }{
+        \vspace*{2cm}
+        \zihao{2} \bfseries \hei { 本科毕业论文 }
+      }
 
       \vspace*{5mm}
 
@@ -460,13 +523,23 @@
     \begin{center}
       \vspace*{5mm}
 
-      % University logo
-      \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      % University logo (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_logo}{
+        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      }{
+        \vspace*{2cm}
+        \zihao{1} \bfseries \hei { 山东大学 }
+      }
 
       \vspace*{10mm}
 
-      % Title image
-      \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      % Title image (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_title}{
+        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      }{
+        \vspace*{2cm}
+        \zihao{2} \bfseries \hei { 研究生学位论文 }
+      }
 
       \vspace*{10mm}
 
@@ -524,6 +597,12 @@
 }
 %    \end{macrocode}
 %% \end{function}
+%%
+%% Legacy lowercase alias for \MakeCover.
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \makecover { } { \MakeCover }
+%    \end{macrocode}
 %%
 %% ===================================================================
 %% Abstract Environments
@@ -609,6 +688,12 @@
 
   \clearpage
 }
+%    \end{macrocode}
+%%
+%% Legacy lowercase alias for \MakeDeclaration.
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \makedeclaration { } { \MakeDeclaration }
 %    \end{macrocode}
 %%
 %% ===================================================================
