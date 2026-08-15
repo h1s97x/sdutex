@@ -20,12 +20,52 @@
         git -c "http.extraHeader=AUTHORIZATION: basic ${AUTH}" \
           push "$REMOTE" "HEAD:refs/heads/main"
 
+# 从 GitHub 拉取逻辑：先用 GITHUB_TOKEN 拉取 GitHub 最新提交，再用 CNB_TOKEN 强制推送到 CNB 对应分支
+.pull-from-github: &pull-from-github
+  imports:
+    - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
+  stages:
+    - name: pull-from-github
+      script: |
+        set -e
+        git config --global user.name "CNB Sync"
+        git config --global user.email "cnb@cnb.cool"
+
+        # 触发流水线所在的分支（web_trigger 场景下为所选分支），默认 main
+        BRANCH="${CNB_BRANCH:-main}"
+        echo "目标分支：${BRANCH}"
+
+        # 1) 用 GITHUB_TOKEN 拉取 GitHub 最新提交
+        REMOTE="github"
+        # 移除并重建 remote，确保 URL 干净、不含 token
+        git remote remove "$REMOTE" 2>/dev/null || true
+        git remote add "$REMOTE" https://github.com/h1s97x/sdutex.git
+        # 通过 http.extraHeader 注入凭证，避免 GITHUB_TOKEN 写入 .git/config
+        GH_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+        git -c "http.extraHeader=AUTHORIZATION: basic ${GH_AUTH}" \
+          fetch "$REMOTE" "$BRANCH"
+
+        # 2) 用 CNB_TOKEN 强制推送到 CNB 对应分支
+        # 重建指向 CNB 仓库的 remote，确保 URL 干净
+        DEST_REMOTE="cnb"
+        git remote remove "$DEST_REMOTE" 2>/dev/null || true
+        git remote add "$DEST_REMOTE" "https://${CNB_WEB_HOST:-cnb.cool}/${CNB_REPO_SLUG}.git"
+        # CNB_TOKEN 与固定用户名 cnb 组合为 basic auth，经 extraHeader 注入
+        DEST_AUTH="$(printf '%s:%s' "${CNB_TOKEN_USER_NAME:-cnb}" "$CNB_TOKEN" | base64 -w0)"
+        # 强制推送：以 GitHub 最新提交为准，覆盖 CNB 对应分支
+        git -c "http.extraHeader=AUTHORIZATION: basic ${DEST_AUTH}" \
+          push --force "$DEST_REMOTE" "FETCH_HEAD:refs/heads/$BRANCH"
+
+        echo "已从 GitHub 拉取 ${BRANCH} 并强制推送到 CNB"
+
 # main 分支 push 自动同步到 GitHub
 main:
   push:
     - <<: *sync-to-github
 
-# $ 兜底分支：手动 web_trigger 同步到 GitHub
+# $ 兜底分支：手动 web_trigger 同步到 GitHub / 从 GitHub 拉取
 $:
   web_trigger_sync_github:
     - <<: *sync-to-github
+  web_trigger_pull_from_github:
+    - <<: *pull-from-github

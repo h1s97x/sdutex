@@ -1,7 +1,10 @@
-# 页面手动触发按钮：同步到 GitHub
+# 页面手动触发按钮：同步到 GitHub / 从 GitHub 拉取
 branch:
   - reg: ^main
     buttons:
       - name: 同步到 GitHub
         description: 将当前 main 分支同步到 GitHub 仓库
         event: web_trigger_sync_github
+      - name: GitHub 拉取
+        description: 从 GitHub 拉取最新提交并强制推送到 CNB 对应分支
+        event: web_trigger_pull_from_github
