@@ -1,71 +1,122 @@
-# 公共同步逻辑：YAML 锚点复用，避免自动/手动两套脚本重复
-.sync-to-github: &sync-to-github
-  imports:
-    - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
-  stages:
-    - name: sync-to-github
-      script: |
-        set -e
-        git config --global user.name "CNB Sync"
-        git config --global user.email "cnb@cnb.cool"
+# CNB 流水线配置
+# 参考仓库：https://cnb.cool/h1s97x/sduthesis （成熟流水线模板）
+#
+# 1. Git Sync：每次 push 到 main 后，自动将代码同步到 GitHub（h1s97x/sdutex）
+#    使用官方 tencentcom/git-sync 插件 + sync_mode: rebase（Rebase 模式），
+#    避免无条件 force 覆盖 GitHub 远端新提交。
+#    敏感信息（GITHUB_USERNAME / GITHUB_TOKEN）存放在密钥仓库 secret-env，通过 imports 引用。
+# 2. 手动触发（Web Trigger）：从 GitHub 拉取最新提交到 CNB（GitHub → CNB）
+#    使用官方插件 sync_mode: pull，按钮见 .cnb/web_trigger.yml，事件挂靠在 $ 兜底分支下。
+# 3. Issue / PR 自动分配处理人 / 审查人：创建后自动将处理人、审查人设置为仓库维护者。
+# 4. Tag 发布：编译 CTAN 包 + 创建 Release + 上传附件（v* tag 触发）。
+#
+# 注意：不要用 `.` 开头的 key 存引用源——CNB 会将其当作 !reference 引用源，
+# 字符串会触发 Schema 校验失败。维护者直接内联，换维护者时统一改下方三处
+# （issue / pr assignee / pr reviewer）。
 
-        REMOTE="github"
-        # 移除并重建 remote，确保 URL 干净、不含 token
-        git remote remove "$REMOTE" 2>/dev/null || true
-        git remote add "$REMOTE" https://github.com/h1s97x/sdutex.git
-
-        # 通过 http.extraHeader 注入凭证，避免 GITHUB_TOKEN 写入 .git/config
-        AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-        # 普通推送（不用 --force），避免覆盖 GitHub 端分叉历史
-        git -c "http.extraHeader=AUTHORIZATION: basic ${AUTH}" \
-          push "$REMOTE" "HEAD:refs/heads/main"
-
-# 从 GitHub 拉取逻辑：先用 GITHUB_TOKEN 拉取 GitHub 最新提交，再用 CNB_TOKEN 强制推送到 CNB 对应分支
-.pull-from-github: &pull-from-github
-  imports:
-    - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
-  stages:
-    - name: pull-from-github
-      script: |
-        set -e
-        git config --global user.name "CNB Sync"
-        git config --global user.email "cnb@cnb.cool"
-
-        # 触发流水线所在的分支（web_trigger 场景下为所选分支），默认 main
-        BRANCH="${CNB_BRANCH:-main}"
-        echo "目标分支：${BRANCH}"
-
-        # 1) 用 GITHUB_TOKEN 拉取 GitHub 最新提交
-        REMOTE="github"
-        # 移除并重建 remote，确保 URL 干净、不含 token
-        git remote remove "$REMOTE" 2>/dev/null || true
-        git remote add "$REMOTE" https://github.com/h1s97x/sdutex.git
-        # 通过 http.extraHeader 注入凭证，避免 GITHUB_TOKEN 写入 .git/config
-        GH_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-        git -c "http.extraHeader=AUTHORIZATION: basic ${GH_AUTH}" \
-          fetch "$REMOTE" "$BRANCH"
-
-        # 2) 用 CNB_TOKEN 强制推送到 CNB 对应分支
-        # 重建指向 CNB 仓库的 remote，确保 URL 干净
-        DEST_REMOTE="cnb"
-        git remote remove "$DEST_REMOTE" 2>/dev/null || true
-        git remote add "$DEST_REMOTE" "https://${CNB_WEB_HOST:-cnb.cool}/${CNB_REPO_SLUG}.git"
-        # CNB_TOKEN 与固定用户名 cnb 组合为 basic auth，经 extraHeader 注入
-        DEST_AUTH="$(printf '%s:%s' "${CNB_TOKEN_USER_NAME:-cnb}" "$CNB_TOKEN" | base64 -w0)"
-        # 强制推送：以 GitHub 最新提交为准，覆盖 CNB 对应分支
-        git -c "http.extraHeader=AUTHORIZATION: basic ${DEST_AUTH}" \
-          push --force "$DEST_REMOTE" "FETCH_HEAD:refs/heads/$BRANCH"
-
-        echo "已从 GitHub 拉取 ${BRANCH} 并强制推送到 CNB"
-
-# main 分支 push 自动同步到 GitHub
 main:
   push:
-    - <<: *sync-to-github
+    - name: sync-to-github
+      imports:
+        - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
+      stages:
+        - name: sync to github
+          image: tencentcom/git-sync
+          settings:
+            target_url: https://github.com/h1s97x/sdutex.git
+            auth_type: https
+            username: ${GITHUB_USERNAME}
+            password: ${GITHUB_TOKEN}
+            branch: main
+            push_tags: true
+            # Rebase 模式：保留 GitHub 仓库特有的平台文件，同时避免无条件 force 覆盖
+            # GitHub 远端的新提交（比当前手写 git push 更安全）。
+            sync_mode: rebase
 
-# $ 兜底分支：手动 web_trigger 同步到 GitHub / 从 GitHub 拉取
+  # PR 创建后自动分配处理人和审查人
+  # 使用 git:reviewer 内置任务（无需脚本、自动注入鉴权）。
+  # 事件放目标分支（main）下，pull_request.target 用目标分支代码执行、且不校验触发者权限，
+  # 对跨仓协作者提交更友好。
+  pull_request.target:
+    - name: auto-assign-pr-owner
+      env:
+        PR_REVIEWER: h1s97x
+      stages:
+        - name: assign pr to owner
+          type: git:reviewer
+          options:
+            type: add-assignee
+            reviewers: ${PR_REVIEWER}
+        - name: add pr reviewer
+          type: git:reviewer
+          options:
+            type: add-reviewer-from-repo-members
+
+# 兜底分支：web_trigger / issue.* / tag_push 等事件
 $:
-  web_trigger_sync_github:
-    - <<: *sync-to-github
+  # 手动触发：从 GitHub 拉取（GitHub → CNB）
+  # 使用官方 tencentcom/git-sync 插件 + sync_mode: pull（Pull 模式），
+  # 相比手写 git fetch + force push 更简洁、更安全。
   web_trigger_pull_from_github:
-    - <<: *pull-from-github
+    - name: web-trigger-pull-from-github
+      imports:
+        - https://cnb.cool/h1s97x/secret-env/-/blob/main/env.yml
+      stages:
+        - name: pull from github
+          image: tencentcom/git-sync
+          settings:
+            target_url: https://github.com/h1s97x/sdutex.git
+            auth_type: https
+            username: ${GITHUB_USERNAME}
+            password: ${GITHUB_TOKEN}
+            sync_mode: pull
+
+  # Issue 创建后自动分配处理人
+  # 使用官方 cnbcool/cnb-cli 插件，一行命令完成分配。
+  issue.open:
+    - name: auto-assign-issue-owner
+      env:
+        ISSUE_ASSIGNEE: h1s97x
+      stages:
+        - name: assign issue to owner
+          image: cnbcool/cnb-cli
+          script: |
+            set -e
+            cnb issues add-assignees --assignees $ISSUE_ASSIGNEE
+
+  # Tag 发布：编译 CTAN 包 + 创建 Release + 上传附件（v* tag 触发）
+  tag_push:
+    - name: release-sdutex
+      docker:
+        image: texlive/texlive:latest
+      stages:
+        - name: build ctan package
+          script: |
+            set -e
+            # 与 GitHub release.yml 保持一致：用 l3build ctan 生成 sdutex-ctan.zip
+            l3build ctan
+            test -s sdutex-ctan.zip
+            echo "CTAN 包已生成: sdutex-ctan.zip ($(stat -c%s sdutex-ctan.zip) bytes)"
+        - name: build documentation
+          script: |
+            set -e
+            l3build doc
+            # 文档产物定位（l3build doc 默认输出到 build/distrib/doc 下）
+            DOC_PDF=$(find build -name "*.pdf" -path "*doc*" 2>/dev/null | head -1 || true)
+            if [ -n "$DOC_PDF" ]; then
+              cp "$DOC_PDF" sduthesis-doc.pdf
+              test -s sduthesis-doc.pdf
+              echo "文档已生成: sduthesis-doc.pdf"
+            else
+              echo "未找到文档 PDF，跳过"
+            fi
+        - name: create release
+          type: git:release
+          options:
+            description: "sdutex 发布（CTAN 包见附件）"
+        - name: upload release assets
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - "./sdutex-ctan.zip"
+              - "./sduthesis-doc.pdf"

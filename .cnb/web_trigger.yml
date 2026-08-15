@@ -1,10 +1,15 @@
 # 页面手动触发按钮：同步到 GitHub / 从 GitHub 拉取
+# 按钮权限限制为仓库 owner / master / developer，避免普通成员误触发同步。
 branch:
   - reg: ^main
     buttons:
       - name: 同步到 GitHub
-        description: 将当前 main 分支同步到 GitHub 仓库
+        description: 将当前 main 分支同步到 GitHub 仓库（CNB → GitHub）
         event: web_trigger_sync_github
+        permissions:
+          roles: [owner, master, developer]
       - name: GitHub 拉取
-        description: 从 GitHub 拉取最新提交并强制推送到 CNB 对应分支
+        description: 从 GitHub 拉取最新提交并更新 CNB 对应分支（GitHub → CNB）
         event: web_trigger_pull_from_github
+        permissions:
+          roles: [owner, master, developer]
