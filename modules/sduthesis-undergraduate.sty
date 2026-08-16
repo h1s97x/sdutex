@@ -1,0 +1,73 @@
+%%
+%% sduthesis-undergraduate.sty
+%% SDUTeX - 本科毕业论文模块
+%% https://github.com/h1s97x/sdutex
+%%
+%% Copyright (C) 2024 SDU LaTeX Contributors
+%%
+%% This module is part of the sduthesis plugin architecture and provides
+%% the undergraduate (bachelor) cover page.  It hooks into the kernel's
+%% ``sduthesis/cover-style'' hook.
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesExplPackage{sduthesis-undergraduate}
+  {2024/12/01}{1.1.0}{Undergraduate module for sduthesis}
+
+\cs_new_protected:Npn \sdu_cover_undergraduate:
+{
+  \begin{titlepage}
+    \begin{center}
+      \vspace*{5mm}
+
+      % University logo (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_logo}{
+        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      }{
+        \vspace*{2cm}
+        \zihao{1} \bfseries \heiti { 山东大学 }
+      }
+
+      \vspace*{10mm}
+
+      % Title image (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_title}{
+        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      }{
+        \vspace*{2cm}
+        \zihao{2} \bfseries \heiti { 本科毕业论文 }
+      }
+
+      \vspace*{5mm}
+
+      % Thesis title label
+      \begin{flushleft}
+        \zihao{3} \bfseries \fangsong {论\qquad 文\qquad 题\qquad 目：}
+      \end{flushleft}
+
+      % Thesis title
+      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
+        \centering \zihao{2} \bfseries \heiti { \GetTitle }
+      \end{minipage}
+
+      \vspace*{30mm}
+
+      % Information table
+      \__sdu_cover_entry:nn { 姓\qquad 名 } { \__sdu_secret_info:n { \GetAuthor } }
+      \__sdu_cover_entry:nn { 学\qquad 号 } { \__sdu_secret_info_fixed:Nn \g__sdu_student_id_tl { 10 } }
+      \__sdu_cover_entry:nn { 学\qquad 院 } { \GetSchool }
+      \__sdu_cover_entry:nn { 专\qquad 业 } { \GetMajor }
+      \__sdu_cover_entry:nn { 指\ 导\ 教\ 师 } { \__sdu_secret_info:n { \GetSupervisor } }
+
+      \vspace*{35mm}
+
+      % Date
+      \zihao{3} \kaishu { \GetDate }
+    \end{center}
+  \end{titlepage}
+}
+
+\hook_gput_code:nnn { sduthesis/cover-style } { undergraduate } {
+  \sdu_cover_undergraduate:
+}
+
+\endinput

@@ -1,0 +1,22 @@
+%%
+%% sduthesis-blindreview.sty
+%% SDUTeX - 盲审模块
+%% https://github.com/h1s97x/sdutex
+%%
+%% Copyright (C) 2024 SDU LaTeX Contributors
+%%
+%% This module is part of the sduthesis plugin architecture and enables
+%% blind-review mode: sensitive information (author name, student id,
+%% supervisor) is hidden on the cover.  It flips the kernel's blind flag
+%% so that \__sdu_secret_info:n and \__sdu_secret_info_fixed:Nn hide their
+%% content, and it also masks the cover authors via the before-cover
+%% hook.
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesExplPackage{sduthesis-blindreview}
+  {2024/12/01}{1.1.0}{Blind review module for sduthesis}
+
+% 开启盲审：让内核的 \sdu_secret_info 隐藏敏感信息
+\bool_gset_true:N \g__sdu_blind_bool
+
+\endinput

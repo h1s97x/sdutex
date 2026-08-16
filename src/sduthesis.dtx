@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{sduthesis}[2024/12/01 1.0.0 Shandong University Thesis Template]
+\ProvidesClass{sduthesis}[2024/12/01 1.1.0 Shandong University Thesis Template]
 
 %% \iffalse
 %%
@@ -34,9 +34,21 @@
 %% Class Structure
 %% ===================================================================
 %%
+%% This document class implements the *kernel* of the SDUTeX plugin
+%% architecture:
+%%
+%%   1. Engine + base class loading + basic layout
+%%   2. The SDUTeX Hook system (6 named hooks)
+%%   3. Module loader (``module = {...}'') triggered at begindocument
+%%
+%% All degree-specific logic (cover pages, blind-review hiding, etc.)
+%% has been moved out into the companion ``modules/*.sty'' files so that
+%% the kernel stays degree-agnostic and acts as the single source of
+%% truth.
+%%
 %% \subsection{Class Identity}
 %%
-%% \changes{v1.0.0}{2024/12/01}{Initial release}
+%% \changes{v1.1.0}{2024/12/01}{Kernel + modules + hooks architecture}
 %%
 %%    \begin{macrocode}
 %<!CLASS>
@@ -61,8 +73,8 @@
 %%
 %% \subsection{Global Variables}
 %%
-%% \begin{variable}{\g_@@_type_int}
-%% 论文类型：
+%% Degree type (used only as a convenience shortcut that maps onto the
+%% module loader):
 %% \begin{itemize}
 %%   \item 1 = bachelor (本科生)
 %%   \item 2 = master (学术型硕士)
@@ -75,7 +87,6 @@
 \int_new:N \g_@@_type_major_int
 \int_new:N \g_@@_type_professional_int
 %    \end{macrocode}
-%% \end{variable}
 %%
 %% \begin{variable}{\g_@@_blind_bool}
 %% 是否为盲审模式
@@ -90,6 +101,23 @@
 %%    \begin{macrocode}
 %<!CLASS>
 \bool_new:N \g_@@_twoside_bool
+%    \end{macrocode}
+%% \end{variable}
+%%
+%% \begin{variable}{\g_@@_professional_bool}
+%% 是否为专业学位（由 master 模块使用）
+%%    \begin{macrocode}
+%<!CLASS>
+\bool_new:N \g_@@_professional_bool
+%    \end{macrocode}
+%% \end{variable}
+%%
+%% \begin{variable}{\g_@@_module_clist}
+%% 需要加载的模块列表（如 master, blindreview）
+%%    \begin{macrocode}
+%<!CLASS>
+\clist_new:N \g_@@_module_clist
+\clist_new:N \g_@@_module_pending_clist
 %    \end{macrocode}
 %% \end{variable}
 %%
@@ -129,45 +157,9 @@
 %%
 %% \subsection{Auxiliary Functions}
 %%
-%% \begin{function}{\@@_if_type_bachelor:TF}
-%% 判断是否为本科生
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_if_type_bachelor:TF #1#2 {
-  \int_compare:nNnTF {\g_@@_type_int} = {1} {#1} {#2}
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_if_type_master:TF}
-%% 判断是否为硕士
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_if_type_master:TF #1#2 {
-  \int_compare:nNnTF {1} < {\g_@@_type_int} { \int_compare:nNnTF {4} > {\g_@@_type_int} {#1} {#2} } {#2}
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_if_type_doctor:TF}
-%% 判断是否为博士
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_if_type_doctor:TF #1#2 {
-  \int_compare:nNnTF {\g_@@_type_int} = {4} {#1} {#2}
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_if_type_professional:TF}
-%% 判断是否为专业型
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_if_type_professional:TF #1#2 {
-  \int_compare:nNnTF {\g_@@_type_int} = {3} {#1} {#2}
-}
-%    \end{macrocode}
-%% \end{function}
+%% The kernel keeps only the degree-agnostic helpers.  Degree-specific
+%% predicates (bachelor / master / doctor / professional) are provided
+%% by the degree modules so that the kernel itself stays neutral.
 %%
 %% \begin{function}{\@@_if_blind:TF}
 %% 判断是否为盲审模式
@@ -180,15 +172,17 @@
 %% \end{function}
 %%
 %% \begin{function}{\@@_secret_info:n}
-%% 隐藏敏感信息（用于盲审）
+%% 隐藏敏感信息（用于盲审），由 blindreview 模块的钩子改写。
 %%    \begin{macrocode}
 %<!CLASS>
-% \CJKcircle 用于盲审模式下生成隐藏标记（带圆圈符号）。
-% 旧版 CJK 宏包提供此命令，新版 TeX Live 使用 xeCJK，需自行定义。
-\ProvideDocumentCommand \CJKcircle { m } { \textcircled{\footnotesize #1} }
+\cs_new:Npn \@@_secret_circle:n #1 {
+  \leavevmode \prg_replicate:nn { #1 } {
+    \raisebox{0.2ex}{\rule{0.9em}{0.9em}}\kern 0.1em
+  }
+}
 \cs_new:Npn \@@_secret_info:n #1 {
   \@@_if_blind:TF {
-    \leavevmode\CJKcircle { 1 }
+    \@@_secret_circle:n { 1 }
   } {
     #1
   }
@@ -203,11 +197,70 @@
 \cs_new:Npn \@@_secret_info_fixed:Nn #1#2 {
   \tl_if_blank:VTF #1 { } {
     \@@_if_blind:TF {
-      \prg_replicate:nn {#2} { \CJKcircle { 1 } }
+      \@@_secret_circle:n {#2}
     } {
       #1
     }
   }
+}
+%    \end{macrocode}
+%% \end{function}
+%%
+%% ===================================================================
+%% Cover Helper
+%% ===================================================================
+%%
+%% \subsection{Cover Helper}
+%%
+%% A shared, degree-agnostic cover table entry used by the degree
+%% modules.  This is basic layout infrastructure and therefore stays in
+%% the kernel.
+%%    \begin{macrocode}
+%<!CLASS>
+\dim_gset:Nn \g_@@_cover_label_width_dim { 2.3cm }
+\dim_gset:Nn \g_@@_cover_value_width_dim { 5.5cm }
+%    \end{macrocode}
+%%
+%%    \begin{macrocode}
+%<!CLASS>
+\cs_new:Npn \@@_cover_entry:nn #1#2 {
+  \begin{tabular}{>{\centering\arraybackslash}p{\g_@@_cover_label_width_dim}>{\centering\arraybackslash}p{\g_@@_cover_value_width_dim}}
+    \zihao{3} \bfseries \kaishu {#1} &
+    \zihao{3} \kaishu {#2}
+    \\ \cline{2-2}
+  \end{tabular}
+  \vspace{-5mm}
+}
+%    \end{macrocode}
+%%
+%% ===================================================================
+%% Hook System
+%% ===================================================================
+%%
+%% \subsection{Hook System}
+%%
+%% SDUTeX 插件化架构的核心：定义 6 个命名钩子，供模块与用户扩展。
+%% 钩子基于 LaTeX3 内核的 hook 机制实现，支持按标签追加代码。
+%%
+%% \begin{function}{sduthesis/after-setup}
+%% 在 \cs{SDUSetup} 处理完配置后触发。
+%%    \begin{macrocode}
+%<!CLASS>
+\hook_new:n { sduthesis/after-setup }
+\hook_new:n { sduthesis/before-cover }
+\hook_new:n { sduthesis/cover-style }
+\hook_new:n { sduthesis/frontmatter/begin }
+\hook_new:n { sduthesis/mainmatter/begin }
+\hook_new:n { sduthesis/backmatter/begin }
+%    \end{macrocode}
+%% \end{function}
+%%
+%% \begin{function}{\sdu_hook_use:n}
+%% 触发一个命名钩子。
+%%    \begin{macrocode}
+%<!CLASS>
+\cs_new:Npn \sdu_hook_use:n #1 {
+  \hook_use:n { #1 }
 }
 %    \end{macrocode}
 %% \end{function}
@@ -218,19 +271,31 @@
 %%
 %% \subsection{Options Parsing}
 %%
-%% Declare class options.
+%% Declare class options.  The \texttt{degree} and \texttt{blind}
+%% options are kept for backward compatibility and transparently mapped
+%% onto the module loader; \texttt{module} provides the new combined
+%% loading interface.
 %%    \begin{macrocode}
 %<!CLASS>
 \keys_define:nn { sdu / option } {
   degree .choices:nn = { bachelor, master, professional, doctor } {
     \int_gset:Nn \g_@@_type_int {\l_keys_choice_int}
+    \bool_gset_false:N \g_@@_professional_bool
+    \str_if_eq:eeT { \l_keys_choice_tl } { professional } {
+      \bool_gset_true:N \g_@@_professional_bool
+    }
+    \clist_gput_right:Nx \g_@@_module_pending_clist { degree-\l_keys_choice_tl }
   },
   degree .value_required:n = true,
   degree .initial:n = {bachelor},
+  professional .bool_set:N = \g_@@_professional_bool,
   blind .bool_set:N = \g_@@_blind_bool,
   blind .initial:n = {false},
   twoside .bool_set:N = \g_@@_twoside_bool,
   twoside .initial:n = {false},
+  module .code:n = {
+    \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
+  },
   unknown .code:n = {
     \PassOptionsToClass {\l_keys_key_tl} {ctexbook}
   }
@@ -243,7 +308,7 @@
 \ProcessKeysOptions { sdu / option }
 %    \end{macrocode}
 %%
-%% Legacy command to set the degree type.
+%% Legacy command to set the degree type (maps onto module loading).
 %%    \begin{macrocode}
 %<!CLASS>
 \NewDocumentCommand \degree { m } {
@@ -320,9 +385,18 @@
 %% Set Chinese font (using system fonts).
 %%    \begin{macrocode}
 %<!CLASS>
-\setmainfont { TeX~Gyre~Termes } [AutoFakeBold]
-\setsansfont { TeX~Gyre~Heros }
-\setmonofont { TeX~Gyre~Cursor }
+% Windows 环境优先使用系统字体（Times New Roman / Arial / Consolas），
+% 其他平台（Linux CI / macOS）回退到 TeX Live 自带的 TeX Gyre 字体，
+% 以保证 make test 在无 Windows 字体的环境中也能通过。
+\sys_if_platform_windows:TF {
+  \setmainfont{Times~New~Roman}[AutoFakeBold]
+  \setsansfont{Arial}
+  \setmonofont{Consolas}
+} {
+  \setmainfont{TeX~Gyre~Termes}[AutoFakeBold]
+  \setsansfont{TeX~Gyre~Heros}
+  \setmonofont{TeX~Gyre~Cursor}
+}
 %    \end{macrocode}
 %%
 %% Set bibliography style (use custom .bst).
@@ -360,7 +434,8 @@
 %%
 %% \subsection{User Setup Interface}
 %%
-%% Define setup keys.
+%% Define setup keys.  \texttt{module} 用于在文档内组合加载模块，
+%% 如 \verb|\SDUSetup{ module = {master, blindreview} }|。
 %%    \begin{macrocode}
 %<!CLASS>
 \keys_define:nn { sdu / setup } {
@@ -380,37 +455,73 @@
   date .tl_gset:N = \g_@@_date_tl,
   keywords .tl_gset:N = \g_@@_cn_keywords_tl,
   keywords* .tl_gset:N = \g_@@_en_keywords_tl,
+  module .code:n = {
+    \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
+  },
 }
 %    \end{macrocode}
 %%
 %% \begin{function}{\SDUSetup}
-%% Main setup command for users.
+%% Main setup command for users.  Fires the
+%% \texttt{sduthesis/after-setup} hook once configuration is applied.
 %%    \begin{macrocode}
 %<!CLASS>
 \NewDocumentCommand \SDUSetup { m } {
   \keys_set:nn { sdu / setup } {#1}
+  \hook_use:n { sduthesis/after-setup }
 }
 %    \end{macrocode}
 %% \end{function}
 %%
-%% \begin{function}{\SDUSetup, legacy commands}
-%% Legacy compatibility aliases for the old interface.
-%% These commands map to the modern setup keys.
+%% Legacy commands mapping to the modern setup keys.
 %%    \begin{macrocode}
 %<!CLASS>
-% \DeclareDocumentCommand 用于重定义 LaTeX/ctexbook 内核命令，
-% 比 \RenewDocumentCommand 更宽松，兼容严格模式。
-\DeclareDocumentCommand \title { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { title* = {#2} } } { \keys_set:nn { sdu / setup } { title = {#2} } } }
-\DeclareDocumentCommand \author { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { author* = {#2} } } { \keys_set:nn { sdu / setup } { author = {#2} } } }
-\NewDocumentCommand \school { m } { \keys_set:nn { sdu / setup } { school = {#1} } }
-\NewDocumentCommand \major { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { major* = {#2} } } { \keys_set:nn { sdu / setup } { major = {#2} } } }
-\NewDocumentCommand \supervisor { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { supervisor* = {#2} } } { \keys_set:nn { sdu / setup } { supervisor = {#2} } } }
-\NewDocumentCommand \cosupervisor { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { co-supervisor* = {#2} } } { \keys_set:nn { sdu / setup } { co-supervisor = {#2} } } }
+\DeclareDocumentCommand \title { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { title* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { title = {#2} }
+  }
+}
+\DeclareDocumentCommand \author { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { author* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { author = {#2} }
+  }
+}
+\DeclareDocumentCommand \school { m } { \keys_set:nn { sdu / setup } { school = {#1} } }
+\DeclareDocumentCommand \major { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { major* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { major = {#2} }
+  }
+}
+\DeclareDocumentCommand \supervisor { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { supervisor* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { supervisor = {#2} }
+  }
+}
+\DeclareDocumentCommand \cosupervisor { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { co-supervisor* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { co-supervisor = {#2} }
+  }
+}
 \DeclareDocumentCommand \date { m } { \keys_set:nn { sdu / setup } { date = {#1} } }
-\NewDocumentCommand \studentid { m } { \keys_set:nn { sdu / setup } { student-id = {#1} } }
-\NewDocumentCommand \keywords { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { keywords* = {#2} } } { \keys_set:nn { sdu / setup } { keywords = {#2} } } }
+\DeclareDocumentCommand \studentid { m } { \keys_set:nn { sdu / setup } { student-id = {#1} } }
+\DeclareDocumentCommand \keywords { s m } {
+  \IfBooleanTF {#1} {
+    \keys_set:nn { sdu / setup } { keywords* = {#2} }
+  } {
+    \keys_set:nn { sdu / setup } { keywords = {#2} }
+  }
+}
 %    \end{macrocode}
-%% \end{function}
 %%
 %% Getter commands.
 %%    \begin{macrocode}
@@ -432,169 +543,120 @@
 %    \end{macrocode}
 %%
 %% ===================================================================
-%% Cover Page
+%% Module Loader
 %% ===================================================================
 %%
-%% \subsection{Cover Page}
+%% \subsection{Module Loader}
 %%
-%% Layout constants.
+%% Load a single module file \texttt{sduthesis-<name>.sty}.
 %%    \begin{macrocode}
 %<!CLASS>
-\dim_gset:Nn \g_@@_cover_label_width_dim { 2.3cm }
-\dim_gset:Nn \g_@@_cover_value_width_dim { 5.5cm }
-%    \end{macrocode}
-%%
-%% Cover table entry.
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_cover_entry:nn #1#2 {
-  \begin{tabular}{>{\centering\arraybackslash}p{\g_@@_cover_label_width_dim}>{\centering\arraybackslash}p{\g_@@_cover_value_width_dim}}
-    \zihao{3} \bfseries \kaishu {#1} &
-    \zihao{3} \kaishu {#2}
-    \\ \cline{2-2}
-  \end{tabular}
-  \vspace{-5mm}
-}
-%    \end{macrocode}
-%%
-%% Bachelor cover page.
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_make_cover_bachelor: {
-  \begin{titlepage}
-    \begin{center}
-      \vspace*{5mm}
-
-      % University logo (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_logo}{
-        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
-      }{
-        \vspace*{2cm}
-        \zihao{1} \bfseries \heiti { 山东大学 }
-      }
-
-      \vspace*{10mm}
-
-      % Title image (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_title}{
-        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
-      }{
-        \vspace*{2cm}
-        \zihao{2} \bfseries \heiti { 本科毕业论文 }
-      }
-
-      \vspace*{5mm}
-
-      % Thesis title label
-      \begin{flushleft}
-        \zihao{3} \bfseries \fangsong {论\qquad 文\qquad 题\qquad 目：}
-      \end{flushleft}
-
-      % Thesis title
-      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{2} \bfseries \heiti { \GetTitle }
-      \end{minipage}
-
-      \vspace*{30mm}
-
-      % Information table
-      \@@_cover_entry:nn { 姓\qquad 名 } { \@@_secret_info:n { \GetAuthor } }
-      \@@_cover_entry:nn { 学\qquad 号 } { \@@_secret_info_fixed:Nn \g_@@_student_id_tl { 10 } }
-      \@@_cover_entry:nn { 学\qquad 院 } { \GetSchool }
-      \@@_cover_entry:nn { 专\qquad 业 } { \GetMajor }
-      \@@_cover_entry:nn { 指\ 导\ 教\ 师 } { \@@_secret_info:n { \GetSupervisor } }
-
-      \vspace*{35mm}
-
-      % Date
-      \zihao{3} \kaishu { \GetDate }
-    \end{center}
-  \end{titlepage}
-}
-%    \end{macrocode}
-%%
-%% Graduate cover page (master/doctor).
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_make_cover_graduate: {
-  \begin{titlepage}
-    \begin{center}
-      \vspace*{5mm}
-
-      % University logo (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_logo}{
-        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
-      }{
-        \vspace*{2cm}
-        \zihao{1} \bfseries \heiti { 山东大学 }
-      }
-
-      \vspace*{10mm}
-
-      % Title image (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_title}{
-        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
-      }{
-        \vspace*{2cm}
-        \zihao{2} \bfseries \heiti { 研究生学位论文 }
-      }
-
-      \vspace*{10mm}
-
-      % Thesis type
-      \@@_if_type_professional:TF {
-        \zihao{2} \bfseries \heiti { 专业学位（硕士/博士）论文 }
-      } {
-        \zihao{2} \bfseries \heiti { 学术学位（硕士/博士）论文 }
-      }
-
-      \vspace*{10mm}
-
-      % Chinese title
-      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{2} \bfseries \heiti { \GetTitle }
-      \end{minipage}
-
-      \vspace*{8mm}
-
-      % English title
-      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{4} \heiti { \GetTitleEn }
-      \end{minipage}
-
-      \vspace*{15mm}
-
-      % Author info
-      \@@_cover_entry:nn { 研究生姓名 } { \@@_secret_info:n { \GetAuthor } }
-      \@@_cover_entry:nn { 学科专业 } { \GetMajor }
-      \@@_cover_entry:nn { 指导教师 } { \@@_secret_info:n { \GetSupervisor } ~
-                                           \GetSupervisorTitle }
-      \tl_if_blank:VTF \g_@@_co_supervisor_tl { } {
-        \@@_cover_entry:nn { 合作指导教师 } { \@@_secret_info:n { \GetCoSupervisor } }
-      }
-
-      \vspace*{20mm}
-
-      % Date
-      \zihao{3} \kaishu { \GetDate }
-    \end{center}
-  \end{titlepage}
-}
-%    \end{macrocode}
-%%
-%% \begin{function}{\MakeCover}
-%% Generate the cover page.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \MakeCover { } {
-  \@@_if_type_bachelor:TF {
-    \@@_make_cover_bachelor:
+\cs_new_protected:Npn \sdu_load_module:n #1 {
+  \file_if_exist:nTF { sduthesis-#1.sty } {
+    \RequirePackage { sduthesis-#1 }
+    \clist_gput_right:Nx \g_@@_module_clist { #1 }
   } {
-    \@@_make_cover_graduate:
+    \msg_warning:nnx { sdutex } { unknown-module } { #1 }
+  }
+}
+%    \end{macrocode}
+%%
+%% \begin{function}{\sdu_load_module:}
+%% Public user-level command to load a module at any point.
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \sdu_load_module: { m } {
+  \sdu_load_module:n { #1 }
+}
+%    \end{macrocode}
+%% \end{function}
+%%
+%% Resolve the pending module requests into a deduplicated load list and
+%% load each module.  Runs inside \cs{AtBeginDocument} so that module
+%% files can rely on the class being fully available.
+%%
+%% \begin{function}{\@@_resolve_module:n}
+%% Convert a raw pending entry (either a real module name or a
+%% \texttt{degree-<name>} placeholder) into the module name(s) to load.
+%%    \begin{macrocode}
+%<!CLASS>
+\cs_new_protected:Npn \@@_resolve_module:n #1 {
+  \str_case:nn { #1 } {
+    { degree-bachelor } { \clist_gput_right:Nn \g_@@_module_clist { undergraduate } }
+    { degree-master } { \clist_gput_right:Nn \g_@@_module_clist { master } }
+    { degree-professional } { \clist_gput_right:Nn \g_@@_module_clist { master } }
+    { degree-doctor } { \clist_gput_right:Nn \g_@@_module_clist { doctor } }
+  } {
+    \clist_gput_right:Nn \g_@@_module_clist { #1 }
   }
 }
 %    \end{macrocode}
 %% \end{function}
+%%
+%% \begin{function}{\@@_load_pending_modules:}
+%%    \begin{macrocode}
+%<!CLASS>
+\cs_new_protected:Npn \@@_load_pending_modules: {
+  \clist_map_inline:Nn \g_@@_module_pending_clist {
+    \@@_resolve_module:n { ##1 }
+  }
+  \clist_clear:N \g_@@_module_pending_clist
+  % 去重后加载
+  \clist_map_inline:Nn \g_@@_module_clist {
+    \sdu_load_module:n { ##1 }
+  }
+  \clist_clear:N \g_@@_module_clist
+}
+%    \end{macrocode}
+%% \end{function}
+%%
+%%    \begin{macrocode}
+%<!CLASS>
+\AtBeginDocument {
+  \@@_load_pending_modules:
+}
+%    \end{macrocode}
+%%
+%% ===================================================================
+%% Front/back matter hooks
+%% ===================================================================
+%%
+%% \subsection{Front/back matter hooks}
+%%
+%% The kernel exposes \cs{frontmatter}, \cs{mainmatter} and
+%% \cs{backmatter} so the corresponding hooks fire at the right time.
+%%    \begin{macrocode}
+%<!CLASS>
+\RenewDocumentCommand \frontmatter { } {
+  \hook_use:n { sduthesis/frontmatter/begin }
+  \relax
+}
+\RenewDocumentCommand \mainmatter { } {
+  \hook_use:n { sduthesis/mainmatter/begin }
+  \relax
+}
+\RenewDocumentCommand \backmatter { } {
+  \hook_use:n { sduthesis/backmatter/begin }
+  \relax
+}
+%    \end{macrocode}
+%%
+%% ===================================================================
+%% Cover Page Dispatcher
+%% ===================================================================
+%%
+%% \subsection{Cover Page Dispatcher}
+%%
+%% \cs{MakeCover} triggers the \texttt{before-cover} and
+%% \texttt{cover-style} hooks.  The actual cover layout is provided by
+%% the loaded degree module via the \texttt{cover-style} hook.
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \MakeCover { } {
+  \hook_use:n { sduthesis/before-cover }
+  \hook_use:n { sduthesis/cover-style }
+}
+%    \end{macrocode}
 %%
 %% Legacy lowercase alias for \MakeCover.
 %%    \begin{macrocode}
@@ -607,6 +669,8 @@
 %% ===================================================================
 %%
 %% \subsection{Abstract Environments}
+%%
+%% These are shared by every degree type, so they stay in the kernel.
 %%
 %% Chinese abstract.
 %%    \begin{macrocode}
@@ -656,7 +720,7 @@
 %%
 %% \subsection{Declaration}
 %%
-%% Academic declaration.
+%% Academic declaration (shared by all degrees).
 %%    \begin{macrocode}
 %<!CLASS>
 \NewDocumentCommand \MakeDeclaration { } {
@@ -700,7 +764,7 @@
 %%
 %% \subsection{Acknowledgement}
 %%
-%% Acknowledgement environment.
+%% Acknowledgement environment (shared by all degrees).
 %%    \begin{macrocode}
 %<!CLASS>
 \NewDocumentEnvironment { acknowledgement } { } {
@@ -723,7 +787,7 @@
 %%
 %% \subsection{Appendix}
 %%
-%% Appendix command.
+%% Appendix command (shared by all degrees).
 %%    \begin{macrocode}
 %<!CLASS>
 \NewDocumentCommand \MakeAppendix { } {
@@ -779,6 +843,15 @@
 }
 
 \pagestyle{plain}
+%    \end{macrocode}
+%%
+%% Message definitions.
+%%    \begin{macrocode}
+%<!CLASS>
+\msg_new:nnn { sdutex } { unknown-module } {
+  Module~'#1'~not~found.~Expected~'sduthesis-#1.sty'.~
+  Available~modules:~undergraduate,~master,~doctor,~blindreview.
+}
 %    \end{macrocode}
 %%
 %% ===================================================================

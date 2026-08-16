@@ -191,40 +191,59 @@
 - 支持嵌套分组
 - 易于扩展
 
-### 决策 4：单文件架构
+### 决策 4：内核 + 模块 + Hook 插件化架构（v1.1.0）
 
-**选择**：所有功能在一个文档类中
+**选择**：将 `sduthesis.dtx` 瘦身为「引擎 + Hook + 基础排版」，学位类型相关逻辑下沉到 `modules/*.sty`
 
 **原因**：
-- 简化用户使用
-- 减少文件依赖
-- 便于部署
+- 核心包成为唯一真源，示例模板（sduthesis）与核心包解耦
+- 通过 Hook 与模块化，学位类型（本科/硕士/博士/盲审）可独立维护与组合
+- 支持 `module={master, blindreview}` 组合加载
 
 **替代方案**：
-- 分离多个文件（增加复杂性）
+- 单文件架构（所有功能集中，但不利于扩展与维护）
 
 ## 扩展机制
 
-### 钩子函数
+### Hook 系统
 
-提供可扩展的钩子：
+内核定义 6 个命名 Hook，供模块与用户扩展：
 
 ```latex
-% 文档初始化后
-\AtBeginDocument
-
-% 文档结束前
-\AtEndDocument
+sduthesis/after-setup
+sduthesis/before-cover
+sduthesis/cover-style
+sduthesis/frontmatter/begin
+sduthesis/mainmatter/begin
+sduthesis/backmatter/begin
 ```
+
+模块通过 `\hook_gput_code:nnn` 注册代码，用户通过 `\MakeCover` / `\frontmatter` 等触发：
+
+```latex
+\hook_gput_code:nnn { sduthesis/cover-style } { undergraduate } {
+  \__sdu_cover_undergraduate:
+}
+```
+
+### 模块加载
+
+通过 `\SDUSetup{ module = {master, blindreview} }` 组合加载，或 `degree=` 选项自动映射：
+
+```latex
+\SDUSetup{ module = {master, blindreview}, ... }
+```
+
+模块在 `\AtBeginDocument` 自动加载。
 
 ### 私有命令
 
 以 `@` 结尾的命令为私有命令：
 
 ```latex
-\@@_make_cover_bachelor:
-\@@_make_cover_graduate:
-\@@_cover_entry:nn
+\__sdu_make_cover_bachelor:
+\__sdu_make_cover_graduate:
+\__sdu_cover_entry:nn
 ```
 
 ### 用户接口

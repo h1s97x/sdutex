@@ -14,6 +14,7 @@ unpack:
 	@mv src/sduthesis.cls build/ 2>/dev/null || true
 	@mv src/sdutex.sty build/ 2>/dev/null || true
 	@mv src/sduthesis.bst build/ 2>/dev/null || true
+	@cp modules/*.sty build/ 2>/dev/null || true
 	@echo "解包完成"
 
 # 运行所有测试
@@ -26,6 +27,7 @@ test:
 	@cp test/test_*.bib build/test/ 2>/dev/null || true
 	@cp src/sdutex.sty build/test/ 2>/dev/null || true
 	@cp src/sduthesis.bst build/test/ 2>/dev/null || true
+	@cp modules/*.sty build/test/ 2>/dev/null || true
 	@cd build/test && xelatex sduthesis.ins > /dev/null 2>&1
 	@cd build/test && FAILED=0; \
 	for f in test_*.tex; do \
@@ -50,6 +52,7 @@ install:
 	@echo "安装到用户目录..."
 	@mkdir -p ~/texmf/tex/latex/sdutex
 	cp -r src/*.sty src/*.cls src/*.bst ~/texmf/tex/latex/sdutex/
+	cp -r modules/*.sty ~/texmf/tex/latex/sdutex/
 	texhash ~/texmf
 	@echo "安装完成"
 
@@ -60,6 +63,7 @@ ctan:
 	cd src && latex sduthesis.ins
 	@mkdir -p tlpkg/sdutex/tex/latex/sdutex
 	cp src/sduthesis.dtx src/sduthesis.ins src/sdutex.sty src/sduthesis.bst tlpkg/sdutex/tex/latex/sdutex/
+	cp modules/*.sty tlpkg/sdutex/tex/latex/sdutex/
 	cd tlpkg && zip -r ../sdutex-ctan.zip sdutex
 	@echo "CTAN 包已生成: sdutex-ctan.zip"
 

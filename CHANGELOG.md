@@ -9,18 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- 统一用户接口为 `\SDUSetup` + getter 的现代化方案
-- 测试文件全部改用大写命令 `\MakeCover` / `\MakeDeclaration`
-- 修复测试文件中的旧式命令和错误的 `\usepackage{test_bib}`
-- `test_blind.tex` 改用 `degree=` 选项
-- 封面 logo 支持可缺失降级（文件不存在时使用文字占位）
-- `make test` 编译失败时正确返回退出码 1
-- CI 使用 `TeX-Live/setup-texlive-action` 安装依赖
-- 清理 `sdutex.sty`：修正 `\USEInstance` 未定义引用、移除中文控制序列名、避免覆盖 `\N`/`\Z`/`\Q`/`\R`/`\C` 命名空间
-- 启用 `\ProvidesPackage{sdutex}` 并统一版本号
+- **插件化架构重构（v1.1.0）**：`sduthesis.dtx` 内核瘦身，仅保留引擎 + Hook + 基础排版，学位类型相关逻辑（封面/盲审）下沉到 `modules/*.sty`
+- 引入 Hook 系统：`sduthesis/after-setup` / `before-cover` / `cover-style` / `frontmatter/begin` / `mainmatter/begin` / `backmatter/begin`
+- 新增 `module=` 组合加载接口：`\SDUSetup{ module = {master, blindreview} }`，并在 begindocument 自动加载模块
+- 新增 `modules/` 目录与 4 个模块：`undergraduate` / `master` / `doctor` / `blindreview`
+- 字体配置增加平台回退：Windows 用系统字体，Linux/macOS 回退到 TeX Gyre，保证 CI 可编译
+- 修复 `\language` 覆写 TeX 原语导致的编译错误；修复 `\hei`/`\CJKcircle` 在部分环境未定义的问题
 
 ### Added
 
+- `test_module.tex`：新增 `module=` 组合加载测试
 - 向后兼容旧式接口命令（`\title` / `\author*` / `\degree` / `\makecover` 等，含带星号别名）
 - 定理环境（`definition` / `theorem` / `lemma` / `corollary` / `proposition` / `proof`）
 

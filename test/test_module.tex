@@ -1,0 +1,28 @@
+% module= 组合加载测试
+% 显式使用 module 键组合加载 master + blindreview 模块
+\documentclass{sduthesis}
+
+\SDUSetup{
+  module = {master, blindreview},
+  title = {基于深度学习的图像识别方法研究},
+  title* = {Research on Image Recognition Methods},
+  author = {张三},
+  school = {计算机科学与技术学院},
+  major = {计算机科学与技术},
+  supervisor = {李四教授},
+  supervisor-title = {教授},
+  date = {2024年6月}
+}
+
+\begin{document}
+
+\MakeCover
+
+\begin{cnabstract}
+  本文研究了基于深度学习的图像识别方法。
+\end{cnabstract}
+
+\chapter{引言}
+本文研究了基于深度学习的图像识别方法。
+
+\end{document}

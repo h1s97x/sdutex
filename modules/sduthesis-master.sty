@@ -1,0 +1,86 @@
+%%
+%% sduthesis-master.sty
+%% SDUTeX - 硕士学位论文模块
+%% https://github.com/h1s97x/sdutex
+%%
+%% Copyright (C) 2024 SDU LaTeX Contributors
+%%
+%% This module is part of the sduthesis plugin architecture and provides
+%% the graduate (master) cover page, shared with professional master.
+%% It hooks into the kernel's ``sduthesis/cover-style'' hook.
+%%
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesExplPackage{sduthesis-master}
+  {2024/12/01}{1.1.0}{Master module for sduthesis}
+
+\cs_new_protected:Npn \sdu_cover_graduate:
+{
+  \begin{titlepage}
+    \begin{center}
+      \vspace*{5mm}
+
+      % University logo (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_logo}{
+        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
+      }{
+        \vspace*{2cm}
+        \zihao{1} \bfseries \heiti { 山东大学 }
+      }
+
+      \vspace*{10mm}
+
+      % Title image (falls back gracefully if missing)
+      \IfFileExists{logos/sdu_title}{
+        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
+      }{
+        \vspace*{2cm}
+        \zihao{2} \bfseries \heiti { 研究生学位论文 }
+      }
+
+      \vspace*{10mm}
+
+      % Thesis type
+      \bool_if:NTF \g__sdu_professional_bool {
+        \zihao{2} \bfseries \heiti { 专业学位（硕士/博士）论文 }
+      } {
+        \zihao{2} \bfseries \heiti { 学术学位（硕士/博士）论文 }
+      }
+
+      \vspace*{10mm}
+
+      % Chinese title
+      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
+        \centering \zihao{2} \bfseries \heiti { \GetTitle }
+      \end{minipage}
+
+      \vspace*{8mm}
+
+      % English title
+      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
+        \centering \zihao{4} \heiti { \GetTitleEn }
+      \end{minipage}
+
+      \vspace*{15mm}
+
+      % Author info
+      \__sdu_cover_entry:nn { 研究生姓名 } { \__sdu_secret_info:n { \GetAuthor } }
+      \__sdu_cover_entry:nn { 学科专业 } { \GetMajor }
+      \__sdu_cover_entry:nn { 指导教师 } { \__sdu_secret_info:n { \GetSupervisor } ，
+                                           \GetSupervisorTitle }
+      \tl_if_blank:VF \g__sdu_co_supervisor_tl {
+        \__sdu_cover_entry:nn { 合作指导教师 } { \__sdu_secret_info:n { \GetCoSupervisor } }
+      }
+
+      \vspace*{20mm}
+
+      % Date
+      \zihao{3} \kaishu { \GetDate }
+    \end{center}
+  \end{titlepage}
+}
+
+\hook_gput_code:nnn { sduthesis/cover-style } { master } {
+  \sdu_cover_graduate:
+}
+
+\endinput

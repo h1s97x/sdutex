@@ -78,6 +78,35 @@ This paper studies image recognition methods based on deep learning...
 \end{document}
 ```
 
+## 插件化架构（内核 + 模块 + Hook）
+
+SDUTeX v1.1.0 采用「内核 + 模块 + Hook」插件化架构。核心包 `sduthesis` 只负责引擎、Hook 与基础排版，学位类型相关逻辑（封面 / 盲审）由独立的模块承载：
+
+| 模块文件 | 对应学位类型 |
+|----------|------------|
+| `sduthesis-undergraduate.sty` | 本科 |
+| `sduthesis-master.sty` | 硕士 / 专业硕士 |
+| `sduthesis-doctor.sty` | 博士 |
+| `sduthesis-blindreview.sty` | 盲审 |
+
+### 组合加载 `module=`
+
+通过 `\SDUSetup{ module = {...} }` 可自由组合模块，模块会在 `\begin{document}` 时自动加载：
+
+```latex
+\documentclass{sduthesis}
+
+\SDUSetup{
+  module = {master, blindreview},   % 硕士 + 盲审
+  title = {...},
+  ...
+}
+```
+
+### 内置 Hook
+
+内核提供 6 个命名 Hook 供扩展：`after-setup`、`before-cover`、`cover-style`、`frontmatter/begin`、`mainmatter/begin`、`backmatter/begin`。
+
 ## 旧式命令兼容
 
 为了向后兼容，以下旧式命令仍可使用（推荐使用 `\SDUSetup` 现代化接口）：

@@ -11,8 +11,21 @@ module = "sdutex"
 sourcefiledir = "src"
 sourcefiles = {"sduthesis.dtx", "sduthesis.ins"}
 
+-- 模块目录
+modulefiledir = "modules"
+modulefiles = {
+  "sduthesis-undergraduate.sty",
+  "sduthesis-master.sty",
+  "sduthesis-doctor.sty",
+  "sduthesis-blindreview.sty"
+}
+
 -- 安装文件
-installfiles = {"*.cls", "*.sty", "*.def", "*.bst"}
+installfiles = {"*.cls", "*.sty", "*.def", "*.bst",
+  "../modules/sduthesis-undergraduate.sty",
+  "../modules/sduthesis-master.sty",
+  "../modules/sduthesis-doctor.sty",
+  "../modules/sduthesis-blindreview.sty"}
 
 -- 文档生成
 typesetexe = "xelatex"
@@ -47,7 +60,8 @@ testfiles = {
   "test/test_appendix.tex",
   "test/test_acknowledgement.tex",
   "test/test_graduate.tex",
-  "test/test_blind.tex"
+  "test/test_blind.tex",
+  "test/test_module.tex"
 }
 
 -- CTAN 发布设置
@@ -60,7 +74,11 @@ tdslocations = {
   "tex/latex/sdutex/sduthesis.cls",
   "tex/latex/sdutex/sdutex.sty",
   "tex/latex/sdutex/sduthesis.bst",
-  "tex/latex/sdutex/sduthesis-*.def"
+  "tex/latex/sdutex/sduthesis-*.def",
+  "tex/latex/sdutex/sduthesis-undergraduate.sty",
+  "tex/latex/sdutex/sduthesis-master.sty",
+  "tex/latex/sdutex/sduthesis-doctor.sty",
+  "tex/latex/sdutex/sduthesis-blindreview.sty"
 }
 
 -- Git 版本信息
