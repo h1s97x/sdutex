@@ -43,7 +43,7 @@ main:
             sync_mode: rebase
 
   # PR 创建后自动分配处理人和审查人 + PR 门禁
-  pull_request.target:
+  pull_request:
     - name: auto-assign-pr-owner
       env:
         PR_REVIEWER: h1s97x
