@@ -1,0 +1,42 @@
+\documentclass[degree=bachelor]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试图表目录
+\typeout{=== listoffigures test ===}
+\typeout{\ListOfFigures command defined}
+
+\OMIT
+\begin{document}
+\END
+\chapter{图表目录测试}
+\begin{figure}[htbp]
+  \centering
+  \rule{2cm}{2cm}
+  \caption{测试图一}
+  \label{fig:one}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \rule{1cm}{1cm}
+  \caption{测试图二}
+  \label{fig:two}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{cc}
+    x & y \\
+    1 & 2
+  \end{tabular}
+  \caption{测试表一}
+  \label{tab:one}
+\end{table}
+
+\ListOfFigures
+\ListOfTables
+\end{document}

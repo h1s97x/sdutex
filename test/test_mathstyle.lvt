@@ -1,0 +1,25 @@
+\documentclass[degree=bachelor, math-style=ISO]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试 math-style 选项
+\typeout{=== math-style option ===}
+\typeout{\tl_use:N \g__sdu_math_style_tl}
+
+\SDUSetup{
+  math-style = GB
+}
+\typeout{=== after re-set ===}
+\typeout{\tl_use:N \g__sdu_math_style_tl}
+
+\OMIT
+\begin{document}
+\END
+\chapter{数学风格测试}
+\begin{equation}
+  \mathrm{d} = \int_0^\infty e^{-x}\,\mathrm{d}x
+\end{equation}
+\end{document}

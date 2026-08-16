@@ -1,7 +1,7 @@
 # SDUTeX Makefile
 # 山东大学 LaTeX 论文模板核心包
 
-.PHONY: all test unpack clean install ctan help
+.PHONY: all test test-l3 unpack clean install ctan help
 
 # 默认目标
 all: test
@@ -17,7 +17,7 @@ unpack:
 	@cp modules/*.sty build/ 2>/dev/null || true
 	@echo "解包完成"
 
-# 运行所有测试
+# 运行所有测试（xelatex + lualatex 双引擎）
 test:
 	@echo "运行测试..."
 	@mkdir -p build/test
@@ -29,23 +29,37 @@ test:
 	@cp src/sduthesis.bst build/test/ 2>/dev/null || true
 	@cp modules/*.sty build/test/ 2>/dev/null || true
 	@cd build/test && xelatex sduthesis.ins > /dev/null 2>&1
+	@echo "=== 传统集成测试（xelatex + lualatex 双引擎） ==="
 	@cd build/test && FAILED=0; \
-	for f in test_*.tex; do \
-		name=$$(basename $$f .tex); \
-		echo "=== 测试: $$name ==="; \
-		if xelatex -interaction=nonstopmode -halt-on-error -output-directory=. $$f > /dev/null 2>&1; then \
-			echo "  OK: $$name"; \
-		else \
-			echo "  失败: $$name"; \
-			FAILED=1; \
-		fi; \
+	for eng in xelatex lualatex; do \
+		echo "--- 引擎: $$eng ---"; \
+		for f in test_*.tex; do \
+			name=$$(basename $$f .tex); \
+			echo "  测试: $$name"; \
+			if $$eng -interaction=nonstopmode -halt-on-error -output-directory=. $$f > /dev/null 2>&1; then \
+				echo "    OK: $$name"; \
+			else \
+				echo "    失败: $$name ($$eng)"; \
+				FAILED=1; \
+			fi; \
+		done; \
 	done; \
 	if [ $$FAILED -ne 0 ]; then \
 		echo "存在编译失败，测试未通过"; \
 		exit 1; \
 	fi
-	@echo "测试完成"
+	@echo "传统测试完成"
 	@ls -la build/test/*.pdf 2>/dev/null | wc -l | xargs -I {} echo "生成 {} 个 PDF"
+
+# l3build 回归测试（.lvt/.tlg，xetex/luatex 双引擎）
+test-l3:
+	@echo "运行 l3build 回归测试..."
+	@if command -v l3build > /dev/null 2>&1; then \
+		l3build check 2>&1 | tail -40; \
+	else \
+		echo "l3build 不可用，请安装 TeX Live 或 l3build"; \
+		exit 1; \
+	fi
 
 # 安装到用户目录
 install:
@@ -81,7 +95,8 @@ help:
 	@echo ""
 	@echo "用法:"
 	@echo "  make unpack    解包 DTX 文件生成 .cls/.sty"
-	@echo "  make test      运行所有测试"
+	@echo "  make test      运行集成测试（xelatex + lualatex）"
+	@echo "  make test-l3   运行 l3build 回归测试（.lvt/.tlg）"
 	@echo "  make install   安装到用户 TeX 目录"
 	@echo "  make ctan      生成 CTAN 发布包"
 	@echo "  make clean     清理生成的文件"

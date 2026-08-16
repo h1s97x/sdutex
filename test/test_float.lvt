@@ -1,0 +1,31 @@
+\documentclass[degree=bachelor]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试浮动体相关功能
+\typeout{=== float test start ===}
+
+\OMIT
+\begin{document}
+\END
+\chapter{浮动体测试}
+\begin{figure}[htbp]
+  \centering
+  \rule{2cm}{2cm}
+  \caption{测试图}
+  \label{fig:test}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \begin{tabular}{cc}
+    A & B \\
+    1 & 2
+  \end{tabular}
+  \caption{测试表}
+  \label{tab:test}
+\end{table}
+\end{document}

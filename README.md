@@ -40,16 +40,73 @@ l3build install
 
 ## 快速开始
 
+### 方式一：推荐（info 分组键值，对齐 SJTUTeX）
+
+```latex
+\documentclass[degree=bachelor]{sduthesis}
+
+\SDUSetup{
+  info = {
+    zh/title = {基于深度学习的图像识别研究},
+    en/title = {Research on Deep Learning based Image Recognition},
+    zh/author = {张三},
+    en/author = {Zhang San},
+    zh/school = {计算机科学与技术学院},
+    zh/major = {计算机科学与技术},
+    en/major = {Computer Science and Technology},
+    zh/supervisor = {李教授},
+    zh/supervisor-title = {教授},
+    zh/student-id = {2021001234},
+    zh/date = {2025年6月},
+    zh/keywords = {深度学习, 图像识别},
+    en/keywords = {Deep Learning, Image Recognition}
+  }
+}
+
+\begin{document}
+
+% 生成封面
+\MakeCover
+
+% 中文摘要
+\begin{cnabstract}
+本文研究了基于深度学习的图像识别方法...
+\end{cnabstract}
+
+% 英文摘要
+\begin{enabstract}
+This paper studies image recognition methods based on deep learning...
+\end{enabstract}
+
+% 目录
+\tableofcontents
+
+% 图表目录
+\ListOfFigures
+\ListOfTables
+
+% 正文
+\chapter{引言}
+...
+
+\end{document}
+```
+
+### 方式二：旧式写法（向后兼容）
+
 ```latex
 \documentclass[degree=bachelor]{sduthesis}
 
 \SDUSetup{
   title = {基于深度学习的图像识别研究},
+  title* = {Research on Deep Learning based Image Recognition},
   author = {张三},
+  author* = {Zhang San},
   school = {计算机科学与技术学院},
   major = {计算机科学与技术},
-  student-id = {2021001234},
   supervisor = {李教授},
+  supervisor-title = {教授},
+  student-id = {2021001234},
   date = {2025年6月}
 }
 
@@ -76,6 +133,49 @@ This paper studies image recognition methods based on deep learning...
 ...
 
 \end{document}
+```
+
+## 配置选项
+
+### 文档类选项
+
+| 选项 | 值 | 说明 |
+|------|-----|------|
+| `degree` | `bachelor` / `master` / `professional` / `doctor` | 学位类型 |
+| `blind` | `true` / `false` | 盲审模式 |
+| `twoside` | `true` / `false` | 双面打印 |
+| `lang` | `zh` / `en` / `zh-en` / `en-zh` | 文档语言 |
+| `math-style` | `ISO` / `GB` / `french` / `upright` | 数学风格 |
+| `preset` | `sdu` / `sjtu` / `none` | 预设风格 |
+| `module` | 逗号分隔列表 | 组合加载模块 |
+
+> **注意**：`math-style`（及 `preset`）作为文档类选项在类加载时即生效。若在导言区通过 `\SDUSetup{ math-style = ... }` 修改，仅对后续设置生效，且不会重新触发类加载时的样式调整。
+
+### info 分组键值
+
+`\SDUSetup{ info = {...} }` 支持中英双语在同一配置块分组配置：
+
+```latex
+\SDUSetup{
+  info = {
+    zh/title = {...},
+    en/title = {...},
+    zh/author = {...},
+    en/author = {...},
+    zh/student-id = {...},
+    zh/school = {...},
+    zh/major = {...},
+    en/major = {...},
+    zh/supervisor = {...},
+    zh/supervisor-title = {...},
+    en/supervisor = {...},
+    zh/co-supervisor = {...},
+    en/co-supervisor = {...},
+    zh/date = {...},
+    zh/keywords = {...},
+    en/keywords = {...}
+  }
+}
 ```
 
 ## 插件化架构（内核 + 模块 + Hook）

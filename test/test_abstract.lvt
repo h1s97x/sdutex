@@ -1,0 +1,41 @@
+\documentclass[degree=bachelor]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试旧式接口兼容性：title / title*
+\SDUSetup{
+  title = {旧式中文标题},
+  title* = {Legacy English Title}
+}
+
+\typeout{=== legacy title ===}
+\typeout{\tl_use:N \g__sdu_title_tl}
+\typeout{=== legacy title* ===}
+\typeout{\tl_use:N \g__sdu_title_en_tl}
+
+% 测试 info 分组键值覆盖旧式写法
+\SDUSetup{
+  info = {
+    zh/title = {分组中文标题},
+    en/title = {Grouped English Title}
+  }
+}
+
+\typeout{=== grouped title ===}
+\typeout{\tl_use:N \g__sdu_title_tl}
+\typeout{=== grouped title* ===}
+\typeout{\tl_use:N \g__sdu_title_en_tl}
+
+\OMIT
+\begin{document}
+\END
+\begin{cnabstract}
+测试摘要。
+\end{cnabstract}
+\begin{enabstract}
+Test abstract.
+\end{enabstract}
+\end{document}

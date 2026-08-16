@@ -43,25 +43,28 @@ unpackfiles = {"src/sduthesis.dtx"}
 
 -- 测试设置
 checkruns = 3
-checkengines = {"xetex"}
+-- 双引擎测试（luatex/xetex），对齐 l3build 最佳实践
+checkengines = {"xetex", "luatex"}
 checkopts = "-file-line-error -halt-on-error -interaction=nonstopmode"
 stdengine = "xetex"
 recordstatus = true
 
 -- 测试文件目录
-testfiledir = ""
+-- 使用 l3build 的 .lvt/.tlg 回归测试体系
+-- 保留原有 .tex 集成测试作为补充
+unpacksearch = true
+testfiledir = "test"
 testfiles = {
-  "test/test_cover.tex",
-  "test/test_abstract.tex",
-  "test/test_math.tex",
-  "test/test_float.tex",
-  "test/test_bib.tex",
-  "test/test_full.tex",
-  "test/test_appendix.tex",
-  "test/test_acknowledgement.tex",
-  "test/test_graduate.tex",
-  "test/test_blind.tex",
-  "test/test_module.tex"
+  "test_cover",
+  "test_abstract",
+  "test_math",
+  "test_float",
+  "test_module",
+  "test_info",
+  "test_lang",
+  "test_theorem",
+  "test_listoffigures",
+  "test_mathstyle"
 }
 
 -- CTAN 发布设置

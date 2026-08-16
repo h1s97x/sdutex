@@ -21,7 +21,8 @@
     image: texlive/texlive:latest
   stages:
     - name: test
-      script: make test
+      script: |
+        make test
 
 main:
   # push 到 main 后自动同步到 GitHub

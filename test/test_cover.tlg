@@ -1,0 +1,22 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+===title===
+基于深度学习的图像识别研究
+===title-en===
+ResearchonDeepLearningImageRecognition
+===author===
+张三
+===author-en===
+ZhangSan
+===major===
+计算机科学与技术
+===major-en===
+ComputerScienceandTechnology
+===keywords===
+深度学习,图像识别
+===keywords-en===
+DeepLearning,ImageRecognition
+***************
+Compilation 1 of test file completed with exit status 0
+Compilation 2 of test file completed with exit status 0
+Compilation 3 of test file completed with exit status 0

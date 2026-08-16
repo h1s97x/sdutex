@@ -1,0 +1,24 @@
+\documentclass[degree=bachelor, lang=zh-en]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试 lang 选项
+\typeout{=== lang option ===}
+\typeout{\tl_use:N \g__sdu_lang_tl}
+
+% 测试预设选项
+\SDUSetup{
+  preset = sdu
+}
+\typeout{=== preset option ===}
+\typeout{\tl_use:N \g__sdu_preset_tl}
+
+\OMIT
+\begin{document}
+\END
+\chapter{语言选项测试}
+语言选项测试内容。
+\end{document}

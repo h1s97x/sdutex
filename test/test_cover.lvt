@@ -1,0 +1,53 @@
+\documentclass[degree=bachelor]{sduthesis}
+
+\input{regression-test}
+
+\START
+\ExplSyntaxOn
+
+% 测试 info 分组键值：zh/title
+\SDUSetup{
+  info = {
+    zh/title = {基于深度学习的图像识别研究},
+    en/title = {Research on Deep Learning Image Recognition},
+    zh/author = {张三},
+    en/author = {Zhang San},
+    zh/school = {计算机科学与技术学院},
+    zh/major = {计算机科学与技术},
+    en/major = {Computer Science and Technology},
+    zh/supervisor = {李教授},
+    zh/supervisor-title = {教授},
+    zh/date = {2025年6月},
+    zh/keywords = {深度学习, 图像识别},
+    en/keywords = {Deep Learning, Image Recognition}
+  }
+}
+
+\typeout{=== title ===}
+\typeout{\tl_use:N \g__sdu_title_tl}
+\typeout{=== title-en ===}
+\typeout{\tl_use:N \g__sdu_title_en_tl}
+\typeout{=== author ===}
+\typeout{\tl_use:N \g__sdu_author_tl}
+\typeout{=== author-en ===}
+\typeout{\tl_use:N \g__sdu_author_en_tl}
+\typeout{=== major ===}
+\typeout{\tl_use:N \g__sdu_major_tl}
+\typeout{=== major-en ===}
+\typeout{\tl_use:N \g__sdu_major_en_tl}
+\typeout{=== keywords ===}
+\typeout{\tl_use:N \g__sdu_cn_keywords_tl}
+\typeout{=== keywords-en ===}
+\typeout{\tl_use:N \g__sdu_en_keywords_tl}
+
+\OMIT
+\begin{document}
+\END
+\MakeCover
+\begin{cnabstract}
+这是中文摘要测试内容。
+\end{cnabstract}
+\begin{enabstract}
+This is the English abstract test content.
+\end{enabstract}
+\end{document}

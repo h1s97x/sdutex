@@ -142,6 +142,16 @@
 \tl_new:N \g_@@_en_keywords_tl
 \tl_new:N \g_@@_abstract_tl
 \tl_new:N \g_@@_abstract_en_tl
+\tl_new:N \g_@@_degree_name_tl
+\tl_new:N \g_@@_degree_name_en_tl
+% 扩展选项变量
+\tl_new:N \g_@@_lang_tl
+\tl_new:N \g_@@_math_style_tl
+\tl_new:N \g_@@_preset_tl
+\bool_new:N \g_@@_has_listoffigures_bool
+\bool_new:N \g_@@_has_listoftables_bool
+\tl_new:N \g_@@_header_left_tl
+\tl_new:N \g_@@_header_right_tl
 %    \end{macrocode}
 %%
 %% Layout variables.
@@ -296,6 +306,21 @@
   module .code:n = {
     \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
   },
+  % 语言选项
+  lang .choices:nn = { zh, en, zh-en, en-zh } {
+    \tl_gset:Nx \g_@@_lang_tl { \l_keys_choice_tl }
+  },
+  lang .initial:n = { zh },
+  % 数学风格选项
+  math-style .choices:nn = { ISO, GB, french, upright } {
+    \tl_gset:Nx \g_@@_math_style_tl { \l_keys_choice_tl }
+  },
+  math-style .initial:n = { ISO },
+  % 预设风格选项
+  preset .choices:nn = { sdu, sjtu, none } {
+    \tl_gset:Nx \g_@@_preset_tl { \l_keys_choice_tl }
+  },
+  preset .initial:n = { sdu },
   unknown .code:n = {
     \PassOptionsToClass {\l_keys_key_tl} {ctexbook}
   }
@@ -353,7 +378,12 @@
 \RequirePackage { listings }
 \RequirePackage { xcolor }
 \RequirePackage { setspace }
-\RequirePackage { xeCJKfntef }
+% 中文下划线/着重号：XeTeX 用 xeCJKfntef，LuaTeX 用 luatexja 兼容层
+\sys_if_engine_xetex:TF {
+  \RequirePackage { xeCJKfntef }
+} {
+  \RequirePackage { luatexja }
+}
 %    \end{macrocode}
 %%
 %% ===================================================================
@@ -455,9 +485,48 @@
   date .tl_gset:N = \g_@@_date_tl,
   keywords .tl_gset:N = \g_@@_cn_keywords_tl,
   keywords* .tl_gset:N = \g_@@_en_keywords_tl,
+  % 双语分组键值（对齐 SJTUTeX）：\verb|info = { zh/title = {...}, en/title = {...} }|
+  info .code:n = {
+    \keys_set:nn { sdu / info } { #1 }
+  },
+  % 语言、数学风格、预设
+  lang .choices:nn = { zh, en, zh-en, en-zh } {
+    \tl_gset:Nx \g_@@_lang_tl { \l_keys_choice_tl }
+  },
+  math-style .choices:nn = { ISO, GB, french, upright } {
+    \tl_gset:Nx \g_@@_math_style_tl { \l_keys_choice_tl }
+  },
+  preset .choices:nn = { sdu, sjtu, none } {
+    \tl_gset:Nx \g_@@_preset_tl { \l_keys_choice_tl }
+  },
+  % 页眉样式设置
+  header-left .tl_gset:N = \g_@@_header_left_tl,
+  header-right .tl_gset:N = \g_@@_header_right_tl,
   module .code:n = {
     \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
   },
+}
+
+% 双语分组：\verb|info = { zh/title = {...}, en/title = {...} }|
+\keys_define:nn { sdu / info } {
+  zh/title .tl_gset:N = \g_@@_title_tl,
+  zh/author .tl_gset:N = \g_@@_author_tl,
+  zh/student-id .tl_gset:N = \g_@@_student_id_tl,
+  zh/school .tl_gset:N = \g_@@_school_tl,
+  zh/major .tl_gset:N = \g_@@_major_tl,
+  zh/supervisor .tl_gset:N = \g_@@_supervisor_tl,
+  zh/supervisor-title .tl_gset:N = \g_@@_supervisor_title_tl,
+  zh/co-supervisor .tl_gset:N = \g_@@_co_supervisor_tl,
+  zh/date .tl_gset:N = \g_@@_date_tl,
+  zh/keywords .tl_gset:N = \g_@@_cn_keywords_tl,
+  zh/degree-name .tl_gset:N = \g_@@_degree_name_tl,
+  en/title .tl_gset:N = \g_@@_title_en_tl,
+  en/author .tl_gset:N = \g_@@_author_en_tl,
+  en/major .tl_gset:N = \g_@@_major_en_tl,
+  en/supervisor .tl_gset:N = \g_@@_supervisor_en_tl,
+  en/co-supervisor .tl_gset:N = \g_@@_co_supervisor_en_tl,
+  en/keywords .tl_gset:N = \g_@@_en_keywords_tl,
+  en/degree-name .tl_gset:N = \g_@@_degree_name_en_tl,
 }
 %    \end{macrocode}
 %%
@@ -536,10 +605,18 @@
 \NewDocumentCommand \GetMajorEn { } { \tl_use:N \g_@@_major_en_tl }
 \NewDocumentCommand \GetSupervisor { } { \tl_use:N \g_@@_supervisor_tl }
 \NewDocumentCommand \GetSupervisorTitle { } { \tl_use:N \g_@@_supervisor_title_tl }
+\NewDocumentCommand \GetSupervisorEn { } { \tl_use:N \g_@@_supervisor_en_tl }
+\NewDocumentCommand \GetCoSupervisorEn { } { \tl_use:N \g_@@_co_supervisor_en_tl }
 \NewDocumentCommand \GetCoSupervisor { } { \tl_use:N \g_@@_co_supervisor_tl }
 \NewDocumentCommand \GetDate { } { \tl_use:N \g_@@_date_tl }
 \NewDocumentCommand \GetCnKeywords { } { \tl_use:N \g_@@_cn_keywords_tl }
 \NewDocumentCommand \GetEnKeywords { } { \tl_use:N \g_@@_en_keywords_tl }
+% 新增 Getter：语言 / 数学风格 / 预设 / 学位名称
+\NewDocumentCommand \GetLang { } { \tl_use:N \g_@@_lang_tl }
+\NewDocumentCommand \GetMathStyle { } { \tl_use:N \g_@@_math_style_tl }
+\NewDocumentCommand \GetPreset { } { \tl_use:N \g_@@_preset_tl }
+\NewDocumentCommand \GetDegreeName { } { \tl_use:N \g_@@_degree_name_tl }
+\NewDocumentCommand \GetDegreeNameEn { } { \tl_use:N \g_@@_degree_name_en_tl }
 %    \end{macrocode}
 %%
 %% ===================================================================
@@ -672,14 +749,18 @@
 %%
 %% These are shared by every degree type, so they stay in the kernel.
 %%
-%% Chinese abstract.
+%% Chinese abstract.  支持可选参数设置标题（默认“摘要”）。
 %%    \begin{macrocode}
 %<!CLASS>
-\NewDocumentEnvironment { cnabstract } { } {
+\NewDocumentEnvironment { cnabstract } { o } {
   \phantomsection
   \pdfbookmark[0] { 摘要 } { cnabstract }
   \begin{center}
-    \zihao{3} \bfseries \heiti { 摘\qquad 要 }
+    \IfValueTF{#1} {
+      \zihao{3} \bfseries \heiti { #1 }
+    } {
+      \zihao{3} \bfseries \heiti { 摘\qquad 要 }
+    }
   \end{center}
   \vspace{12pt}
   \setlength{\parindent}{1.2em}
@@ -693,14 +774,18 @@
 }
 %    \end{macrocode}
 %%
-%% English abstract.
+%% English abstract.  支持可选参数设置标题（默认 ABSTRACT）。
 %%    \begin{macrocode}
 %<!CLASS>
-\NewDocumentEnvironment { enabstract } { } {
+\NewDocumentEnvironment { enabstract } { o } {
   \phantomsection
   \pdfbookmark[0] { Abstract } { enabstract }
   \begin{center}
-    \zihao{-2} \bfseries { ABSTRACT }
+    \IfValueTF{#1} {
+      \zihao{-2} \bfseries { #1 }
+    } {
+      \zihao{-2} \bfseries { ABSTRACT }
+    }
   \end{center}
   \vspace{12pt}
   \setlength{\parindent}{1.2em}
@@ -833,7 +918,9 @@
 %%
 %% \subsection{Header and Footer}
 %%
-%% Configure header and footer.
+%% Configure header and footer.  支持通过
+%% \verb|\SDUSetup{ header-left = {...}, header-right = {...} }| 自定义页眉。
+%% 默认页眉左侧为论文标题，右侧为章节名。
 %%    \begin{macrocode}
 %<!CLASS>
 \fancypagestyle{plain}{
@@ -842,8 +929,70 @@
   \renewcommand{\headrulewidth}{0pt}
 }
 
+\fancypagestyle{sduthesis}{
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \tl_if_empty:NTF \g_@@_header_left_tl {
+    \fancyhead[L]{\zihao{-5} \GetTitle}
+  } {
+    \fancyhead[L]{\zihao{-5} \tl_use:N \g_@@_header_left_tl}
+  }
+  \tl_if_empty:NTF \g_@@_header_right_tl {
+    \fancyhead[R]{\zihao{-5} \leftmark}
+  } {
+    \fancyhead[R]{\zihao{-5} \tl_use:N \g_@@_header_right_tl}
+  }
+}
+
 \pagestyle{plain}
 %    \end{macrocode}
+%%
+%% \subsection{List of Figures and Tables}
+%%
+%% 图表目录命令（硬缺失功能补充）。
+%%    \begin{macrocode}
+%<!CLASS>
+\NewDocumentCommand \ListOfFigures { } {
+  \phantomsection
+  \pdfbookmark[0] { 图目录 } { listoffigures }
+  \listoffigures
+}
+\NewDocumentCommand \ListOfTables { } {
+  \phantomsection
+  \pdfbookmark[0] { 表目录 } { listoftables }
+  \listoftables
+}
+%    \end{macrocode}
+%%
+%% \subsection{Theorem Environment Enhancement}
+%%
+%% 增强定理环境：补充常用定理样式，并支持 \verb|math-style| 选项。
+%%    \begin{macrocode}
+%<!CLASS>
+% 根据 math-style 调整数学风格
+\str_case:Vn \g_@@_math_style_tl {
+  { french } {
+    \AtBeginDocument { \let\div\relax }
+  }
+}
+% 定理环境（已在前面定义 definition/theorem/lemma/corollary/proposition）
+% 补充：assumption（假设）、conjecture（猜想）、remark（注）、example（例）
+\theoremstyle{plain}
+\newtheorem{assumption}{假设}
+\newtheorem{conjecture}{猜想}
+\newtheorem*{remark}{注}
+\theoremstyle{definition}
+\newtheorem{example}{例}
+% 定理环境的章节编号
+\counterwithin{theorem}{chapter}
+\counterwithin{definition}{chapter}
+\counterwithin{lemma}{chapter}
+\counterwithin{corollary}{chapter}
+\counterwithin{proposition}{chapter}
+\counterwithin{assumption}{chapter}
+\counterwithin{conjecture}{chapter}
+\counterwithin{example}{chapter}
 %%
 %% Message definitions.
 %%    \begin{macrocode}

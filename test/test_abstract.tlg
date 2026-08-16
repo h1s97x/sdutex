@@ -1,0 +1,14 @@
+This is a generated file for the l3build validation system.
+Don't change this file in any respect.
+===legacytitle===
+旧式中文标题
+===legacytitle*===
+LegacyEnglishTitle
+===groupedtitle===
+分组中文标题
+===groupedtitle*===
+GroupedEnglishTitle
+***************
+Compilation 1 of test file completed with exit status 0
+Compilation 2 of test file completed with exit status 0
+Compilation 3 of test file completed with exit status 0
