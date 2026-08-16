@@ -351,8 +351,8 @@ component is constrained by the conditions in this license.
 
 Here is an example of such a notice and statement:
 
-  %% sduthesis.dtx
-  %% Copyright 2024 SDU LaTeX Contributors
+  %% pig.dtx
+  %% Copyright 2008 M. Y. Name
   %
   % This work may be distributed and/or modified under the
   % conditions of the LaTeX Project Public License, either version 1.3
@@ -364,16 +364,17 @@ Here is an example of such a notice and statement:
   %
   % This work has the LPPL maintenance status `maintained'.
   % 
-  % The Current Maintainer of this work is SDU LaTeX Contributors.
+  % The Current Maintainer of this work is M. Y. Name.
   %
-  % This work consists of the files listed in the companion file
-  % sduthesis.dtx and the other files listed in the header of that file.
+  % This work consists of the files pig.dtx and pig.ins
+  % and the derived file pig.sty.
 
 Given such a notice and statement in a file, the conditions
 given in this license document would apply, with the `Work' referring
-to the files of the SDUTeX template, the `Base Interpreter' referring
-to any `LaTeX-Format', and both `Copyright Holder' and `Current
-Maintainer' referring to SDU LaTeX Contributors.
+to the three files `pig.dtx', `pig.ins', and `pig.sty' (the last being
+generated from `pig.dtx' using `pig.ins'), the `Base Interpreter'
+referring to any `LaTeX-Format', and both `Copyright Holder' and
+`Current Maintainer' referring to the person `M. Y. Name'.
 
 If you do not want the Maintenance section of LPPL to apply to your
 Work, change `maintained' above into `author-maintained'.  
@@ -413,18 +414,3 @@ Important Recommendations
    entitled to make reasonable conjectures as to which files comprise
    the Work.
 
-
-MAINTENANCE OF THE SDUTEX WORK
-==============================
-
-The SDUTeX Work is licensed under the LaTeX Project Public License,
-LPPL Version 1.3c (2008-05-04) or any later version.
-
-Copyright 2024 SDU LaTeX Contributors
-
-This Work has the LPPL maintenance status `maintained'.
-
-The Current Maintainer of this Work is SDU LaTeX Contributors.
-
-The base source for this Work is located at:
-  https://github.com/h1s97x/sdutex
