@@ -43,6 +43,8 @@ main:
             sync_mode: rebase
 
   # PR 创建后自动分配处理人和审查人 + PR 门禁
+  # 使用 pull_request 事件：会 checkout 预合并后的代码（含 PR 分支修改），
+  # 而不是 pull_request.target（只 checkout 目标分支 main 的代码）。
   pull_request:
     - name: auto-assign-pr-owner
       env:

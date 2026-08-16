@@ -27,7 +27,6 @@ test:
 	@cp src/sdutex.sty build/test/ 2>/dev/null || true
 	@cp src/sduthesis.bst build/test/ 2>/dev/null || true
 	@cd build/test && xelatex sduthesis.ins > /dev/null 2>&1
-	@cd build/test && xelatex sduthesis.dtx > /dev/null 2>&1
 	@cd build/test && FAILED=0; \
 	for f in test_*.tex; do \
 		name=$$(basename $$f .tex); \

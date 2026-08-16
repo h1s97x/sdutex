@@ -183,6 +183,9 @@
 %% 隐藏敏感信息（用于盲审）
 %%    \begin{macrocode}
 %<!CLASS>
+% \CJKcircle 用于盲审模式下生成隐藏标记（带圆圈符号）。
+% 旧版 CJK 宏包提供此命令，新版 TeX Live 使用 xeCJK，需自行定义。
+\ProvideDocumentCommand \CJKcircle { m } { \textcircled{\footnotesize #1} }
 \cs_new:Npn \@@_secret_info:n #1 {
   \@@_if_blind:TF {
     \leavevmode\CJKcircle { 1 }
@@ -270,7 +273,7 @@
 \RequirePackage { geometry }
 \RequirePackage { fancyhdr }
 \RequirePackage { graphicx }
-\RequirePackage { arrays }
+\RequirePackage { array }
 \RequirePackage { booktabs }
 \RequirePackage { longtable }
 \RequirePackage { enumitem }
@@ -317,9 +320,9 @@
 %% Set Chinese font (using system fonts).
 %%    \begin{macrocode}
 %<!CLASS>
-\setmainfont{Times~New~Roman}[AutoFakeBold]
-\setsansfont{Arial}
-\setmonofont{Consolas}
+\setmainfont { TeX~Gyre~Termes } [AutoFakeBold]
+\setsansfont { TeX~Gyre~Heros }
+\setmonofont { TeX~Gyre~Cursor }
 %    \end{macrocode}
 %%
 %% Set bibliography style (use custom .bst).
@@ -397,22 +400,15 @@
 %<!CLASS>
 % \DeclareDocumentCommand 用于重定义 LaTeX/ctexbook 内核命令，
 % 比 \RenewDocumentCommand 更宽松，兼容严格模式。
-\DeclareDocumentCommand \title { m } { \keys_set:nn { sdu / setup } { title = {#1} } }
-\DeclareDocumentCommand \title* { m } { \keys_set:nn { sdu / setup } { title* = {#1} } }
-\DeclareDocumentCommand \author { m } { \keys_set:nn { sdu / setup } { author = {#1} } }
-\DeclareDocumentCommand \author* { m } { \keys_set:nn { sdu / setup } { author* = {#1} } }
+\DeclareDocumentCommand \title { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { title* = {#2} } } { \keys_set:nn { sdu / setup } { title = {#2} } } }
+\DeclareDocumentCommand \author { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { author* = {#2} } } { \keys_set:nn { sdu / setup } { author = {#2} } } }
 \NewDocumentCommand \school { m } { \keys_set:nn { sdu / setup } { school = {#1} } }
-\NewDocumentCommand \major { m } { \keys_set:nn { sdu / setup } { major = {#1} } }
-\NewDocumentCommand \major* { m } { \keys_set:nn { sdu / setup } { major* = {#1} } }
-\NewDocumentCommand \supervisor { m } { \keys_set:nn { sdu / setup } { supervisor = {#1} } }
-\NewDocumentCommand \supervisor* { m } { \keys_set:nn { sdu / setup } { supervisor* = {#1} } }
-\NewDocumentCommand \cosupervisor { m } { \keys_set:nn { sdu / setup } { co-supervisor = {#1} } }
-\NewDocumentCommand \cosupervisor* { m } { \keys_set:nn { sdu / setup } { co-supervisor* = {#1} } }
+\NewDocumentCommand \major { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { major* = {#2} } } { \keys_set:nn { sdu / setup } { major = {#2} } } }
+\NewDocumentCommand \supervisor { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { supervisor* = {#2} } } { \keys_set:nn { sdu / setup } { supervisor = {#2} } } }
+\NewDocumentCommand \cosupervisor { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { co-supervisor* = {#2} } } { \keys_set:nn { sdu / setup } { co-supervisor = {#2} } } }
 \DeclareDocumentCommand \date { m } { \keys_set:nn { sdu / setup } { date = {#1} } }
 \NewDocumentCommand \studentid { m } { \keys_set:nn { sdu / setup } { student-id = {#1} } }
-\NewDocumentCommand \keywords { m } { \keys_set:nn { sdu / setup } { keywords = {#1} } }
-\NewDocumentCommand \keywords* { m } { \keys_set:nn { sdu / setup } { keywords* = {#1} } }
-\DeclareDocumentCommand \language { m } { }
+\NewDocumentCommand \keywords { s m } { \IfBooleanTF { #1 } { \keys_set:nn { sdu / setup } { keywords* = {#2} } } { \keys_set:nn { sdu / setup } { keywords = {#2} } } }
 %    \end{macrocode}
 %% \end{function}
 %%
@@ -452,9 +448,9 @@
 %%    \begin{macrocode}
 %<!CLASS>
 \cs_new:Npn \@@_cover_entry:nn #1#2 {
-  \begin{tabular}{p{\g_@@_cover_label_width_dim}p{\g_@@_cover_value_width_dim}}
-    \centering \zihao{3} \bfseries \kaishu {#1} &
-    \centering \zihao{3} \kaishu {#2}
+  \begin{tabular}{>{\centering\arraybackslash}p{\g_@@_cover_label_width_dim}>{\centering\arraybackslash}p{\g_@@_cover_value_width_dim}}
+    \zihao{3} \bfseries \kaishu {#1} &
+    \zihao{3} \kaishu {#2}
     \\ \cline{2-2}
   \end{tabular}
   \vspace{-5mm}
@@ -474,7 +470,7 @@
         \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
       }{
         \vspace*{2cm}
-        \zihao{1} \bfseries \hei { 山东大学 }
+        \zihao{1} \bfseries \heiti { 山东大学 }
       }
 
       \vspace*{10mm}
@@ -484,7 +480,7 @@
         \includegraphics[width=0.95\textwidth]{logos/sdu_title}
       }{
         \vspace*{2cm}
-        \zihao{2} \bfseries \hei { 本科毕业论文 }
+        \zihao{2} \bfseries \heiti { 本科毕业论文 }
       }
 
       \vspace*{5mm}
@@ -496,7 +492,7 @@
 
       % Thesis title
       \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{2} \bfseries \hei { \GetTitle }
+        \centering \zihao{2} \bfseries \heiti { \GetTitle }
       \end{minipage}
 
       \vspace*{30mm}
@@ -530,7 +526,7 @@
         \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
       }{
         \vspace*{2cm}
-        \zihao{1} \bfseries \hei { 山东大学 }
+        \zihao{1} \bfseries \heiti { 山东大学 }
       }
 
       \vspace*{10mm}
@@ -540,30 +536,30 @@
         \includegraphics[width=0.95\textwidth]{logos/sdu_title}
       }{
         \vspace*{2cm}
-        \zihao{2} \bfseries \hei { 研究生学位论文 }
+        \zihao{2} \bfseries \heiti { 研究生学位论文 }
       }
 
       \vspace*{10mm}
 
       % Thesis type
       \@@_if_type_professional:TF {
-        \zihao{2} \bfseries \hei { 专业学位（硕士/博士）论文 }
+        \zihao{2} \bfseries \heiti { 专业学位（硕士/博士）论文 }
       } {
-        \zihao{2} \bfseries \hei { 学术学位（硕士/博士）论文 }
+        \zihao{2} \bfseries \heiti { 学术学位（硕士/博士）论文 }
       }
 
       \vspace*{10mm}
 
       % Chinese title
       \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{2} \bfseries \hei { \GetTitle }
+        \centering \zihao{2} \bfseries \heiti { \GetTitle }
       \end{minipage}
 
       \vspace*{8mm}
 
       % English title
       \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{4} \hei { \GetTitleEn }
+        \centering \zihao{4} \heiti { \GetTitleEn }
       \end{minipage}
 
       \vspace*{15mm}
@@ -571,9 +567,9 @@
       % Author info
       \@@_cover_entry:nn { 研究生姓名 } { \@@_secret_info:n { \GetAuthor } }
       \@@_cover_entry:nn { 学科专业 } { \GetMajor }
-      \@@_cover_entry:nn { 指导教师 } { \@@_secret_info:n { \GetSupervisor } \，
+      \@@_cover_entry:nn { 指导教师 } { \@@_secret_info:n { \GetSupervisor } ~
                                            \GetSupervisorTitle }
-      \bool_if:NT \g_@@_co_supervisor_tl {
+      \tl_if_blank:VTF \g_@@_co_supervisor_tl { } {
         \@@_cover_entry:nn { 合作指导教师 } { \@@_secret_info:n { \GetCoSupervisor } }
       }
 
@@ -619,7 +615,7 @@
   \phantomsection
   \pdfbookmark[0] { 摘要 } { cnabstract }
   \begin{center}
-    \zihao{3} \bfseries \hei { 摘\qquad 要 }
+    \zihao{3} \bfseries \heiti { 摘\qquad 要 }
   \end{center}
   \vspace{12pt}
   \setlength{\parindent}{1.2em}
@@ -627,7 +623,7 @@
 }{
   \vspace{1cm}
   \par \noindent
-  \zihao{-4} \bfseries \hei { 关键词： }
+  \zihao{-4} \bfseries \heiti { 关键词： }
   \zihao{-4} \GetCnKeywords
   \clearpage
 }
@@ -667,7 +663,7 @@
   \phantomsection
   \pdfbookmark[0] { 声明 } { declaration }
   \begin{center}
-    \zihao{3} \bfseries \hei { 学位论文独创性声明 }
+    \zihao{3} \bfseries \heiti { 学位论文独创性声明 }
   \end{center}
   \vspace{12pt}
   \setlength{\parindent}{2em}
@@ -711,7 +707,7 @@
   \phantomsection
   \pdfbookmark[0] { 致谢 } { acknowledgement }
   \begin{center}
-    \zihao{3} \bfseries \hei { 致\qquad 谢 }
+    \zihao{3} \bfseries \heiti { 致\qquad 谢 }
   \end{center}
   \vspace{12pt}
   \setlength{\parindent}{2em}
