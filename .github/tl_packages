@@ -55,6 +55,11 @@ graphics
 fancyhdr
 hyperref
 etoolbox
+algorithm
+algorithmicx
+luatexja
+luaotfload
+luatexbase
 
 # demo deps
 tabu
