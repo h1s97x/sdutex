@@ -30,10 +30,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 安装 TeX Live：与 sduthesis 仓库保持一致，使用 zauguin/install-texlive@v4。
+      # 它按 .github/tl_packages 清单安装，且默认自动缓存 ~/texlive，跨 workflow 复用。
       - name: Install TeX Live
-        uses: TeX-Live/setup-texlive-action@v4
+        uses: zauguin/install-texlive@v4
         with:
-          package-file: .github/tl_packages
+          package_file: .github/tl_packages
+
+      # 关键：把 TeX 树字体软链到用户字体目录，让 XeLaTeX 按字体名能找到 Fandol 等中文字体。
+      # 否则会报 `The font "FandolSong" cannot be found`（issue #35 反复失败的根因之一）。
+      # 该做法与 sduthesis 的 build.yml / quality.yml 完全一致。
+      - name: Link fonts for XeTeX
+        run: |
+          mkdir -p ~/.fonts
+          ln -s $(kpsewhich -var-value=TEXMFDIST)/fonts/ ~/.fonts/texmf-dist-fonts
 
       - name: Run tests
         # 运行 l3build 回归测试套件（.tex/.tlg，xetex/luatex 双引擎），

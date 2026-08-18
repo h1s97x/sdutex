@@ -1,129 +1,49 @@
-# l3build toolchain
+# TeX Live packages for sdutex
+# 山东大学 LaTeX 论文模板核心包
+# 策略对齐 sduthesis（https://cnb.cool/h1s97x/sduthesis）：安装完整的 collection
+# 而非逐个列包，避免传递依赖遗漏导致的「缺一个补一个」的反复失败循环。
+
+# ----- 1. 编译基础 -----
+
+scheme-minimal
+
+collection-latex
+collection-xetex
+collection-luatex
+
+# ----- 2. 构建与测试工具 -----
+
+latexmk
 l3build
-l3kernel
-l3packages
-l3backend
-l3keys2e
+chktex
 
-# TeX engine and base
-latex
-latex-bin
-xetex
-luatex
-tex-ini-files
-unicode-data
-knuth-lib
-knuth-local
+# ----- 3. 中文支持 -----
 
-# CJK / Chinese
 ctex
-xecjk
-xeCJKfntef
-cjk
-cjkpunct
-zhnumber
+# fandol 字体（由 collection-fontsrecommended 提供，此处显式声明确保命中）
 fandol
-cjk-gs-integrate
-adobemapping
 
-# fonts
-fontspec
-xunicode
-euenc
-lm
-lm-math
-psnfss
-unicode-math
-tex-gyre
-tex-gyre-math
-cm-unicode
+# ----- 4. 参考文献 -----
 
-# class runtime deps
-xcolor
-geometry
+biber
 biblatex
 biblatex-gb7714-2015
-xstring
-logreq
-xkeyval
-atbegshi
-tocloft
-bookmark
-tabularx
-biber
-amsmath
-amscls
-amsfonts
-mathtools
-bm
-mathrsfs
-jknapltx
-rsfs
-booktabs
-makecell
-graphicx
-graphics
-fancyhdr
-hyperref
-etoolbox
-setspace
-algorithms
+
+# ----- 5. 模板使用的 collection（整组安装）-----
+
+collection-latexextra
+collection-latexrecommended
+collection-fontsrecommended
+collection-mathscience
+
+# ----- 6. 不在任何 collection 中的包 -----
+# 注意：TeX Live 中 algpseudocode 不是独立包名，algpseudocode.sty 由 algorithmicx 提供；
+# tabularx.sty 由 tools collection 提供（collection-latex 已含 tools）；
+# float.sty 由 float 包提供（collection-latexrecommended 已含 float）。
+
 algorithmicx
-float
-ifthen
-luatexja
-luaotfload
-luatexbase
 
-# demo deps
-tabu
-longtable
-multirow
-listings
-subfig
-caption
-environ
-mwe
+# ----- 7. 传递依赖（collection 未自动拉入）-----
 
-# doc driver (ctxdoc / l3doc) deps
-hologo
-alphalph
-auxhook
-bigintcalc
-bitset
-colortbl
-csquotes
-enumitem
-etexcmds
-fancyvrb
-hycolor
-hypdoc
-intcalc
-kvoptions
-multitoc
-pdfescape
-pdftexcmds
-refcount
-rerunfilecheck
-siunitx
-stringenc
-threeparttable
-translations
-underscore
-uniquecounter
-url
-zref
-
-# misc shared deps
-iftex
-ltxcmds
-infwarerr
-kvdefinekeys
-kvsetkeys
-tools
-trimspaces
-ulem
-ms
-oberdiek
-epstopdf-pkg
-makeindex
+logreq
+zhnumber
