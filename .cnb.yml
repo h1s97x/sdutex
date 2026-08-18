@@ -11,18 +11,8 @@
 #   2. 手动触发（Web Trigger）：从 GitHub 拉取最新提交到 CNB（GitHub → CNB），
 #      使用 git-sync 插件 sync_mode: pull，按钮见 .cnb/web_trigger.yml。
 #   3. PR 自动分配处理人 / 审查人：创建后自动将处理人、审查人设置为仓库维护者。
-#   4. PR 门禁：make test（LaTeX 编译测试），保证改动通过 CI 才能合并。
-#   5. Issue 自动分配处理人：Issue 创建后自动分配给仓库维护者。
-#   6. Tag 发布：v* tag 触发时构建 CTAN 包并创建 Release。
-
-# PR 门禁公共配置（make test 编译测试）
-.pr-gate: &pr-gate
-  docker:
-    image: texlive/texlive:latest
-  stages:
-    - name: test
-      script: |
-        make test
+#   4. Issue 自动分配处理人：Issue 创建后自动分配给仓库维护者。
+#   5. Tag 发布：v* tag 触发时构建 CTAN 包并创建 Release。
 
 main:
   # push 到 main 后自动同步到 GitHub
@@ -43,7 +33,8 @@ main:
             # Rebase 模式：保留 GitHub 仓库特有平台文件，同时避免无条件 force 覆盖远端新提交。
             sync_mode: rebase
 
-  # PR 创建后自动分配处理人和审查人 + PR 门禁
+  # PR 创建后自动分配处理人和审查人（make test 编译门禁在 GitHub Actions 流水线中执行，
+  # 见 .github/workflows/test.yml，CNB 侧不重复做 PR 门禁）
   # 使用 pull_request 事件：会 checkout 预合并后的代码（含 PR 分支修改），
   # 而不是 pull_request.target（只 checkout 目标分支 main 的代码）。
   pull_request:
@@ -60,8 +51,6 @@ main:
           type: git:reviewer
           options:
             type: add-reviewer-from-repo-members
-    - name: pr-gate
-      <<: *pr-gate
 
 # 兜底分支：web_trigger / issue.* / tag_push 等事件
 $:

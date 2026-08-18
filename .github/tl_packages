@@ -57,7 +57,7 @@ fancyhdr
 hyperref
 etoolbox
 setspace
-algorithm
+algorithms
 algorithmicx
 float
 ifthen
