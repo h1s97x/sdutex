@@ -23,7 +23,7 @@ SDUTeX 是山东大学学位论文 LaTeX 模板的**核心代码仓库**，提�
 - 遵循山东大学论文格式规范
 - 基于 `\SDUSetup` 集中配置 + LaTeX3 l3keys 机制
 - 基于 ctexbook 原生中文排版，兼容 Overleaf
-- 完整的 l3build 回归测试（xetex/luatex 双引擎）
+- 完整的 l3build 回归测试（XeTeX 引擎，与 sduthesis 一致）
 
 ## 安装
 
@@ -162,7 +162,7 @@ sdutex/
 | 命令 | 说明 |
 |------|------|
 | `make` | 运行 l3build 回归测试 |
-| `make test` | 运行测试（xetex + lualatex 双引擎） |
+| `make test` | 运行 l3build 回归测试（XeTeX 引擎） |
 | `make install` | 安装到本地 |
 | `make ctan` | 生成 CTAN 发布包 |
 | `make clean` | 清理生成的文件 |

@@ -22,14 +22,11 @@
 ## 运行测试
 
 ```bash
-# 运行所有测试（xetex/luatex 双引擎）
+# 运行所有测试（XeTeX 引擎，对齐 sduthesis）
 make test
 
 # 仅 xetex 引擎
 l3build check -e xetex
-
-# 仅 luatex 引擎
-l3build check -e luatex
 
 # 更新 .tlg 基线（当模板输出有意变更时）
 l3build save

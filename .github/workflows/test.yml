@@ -46,7 +46,7 @@ jobs:
           ln -s $(kpsewhich -var-value=TEXMFDIST)/fonts/ ~/.fonts/texmf-dist-fonts
 
       - name: Run tests
-        # 运行 l3build 回归测试套件（.tex/.tlg，xetex/luatex 双引擎），
+        # 运行 l3build 回归测试套件（.tex/.tlg，XeTeX 引擎），
         # 对齐 sduthesis 的 CI 设计，由 l3build 统一负责解包、TDS 布局与测试编译。
         run: make test
 

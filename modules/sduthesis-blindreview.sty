@@ -31,6 +31,13 @@
 %   2. 覆盖个人信息 Getter，摘要/致谢等处的作者名同样隐藏；
 %   3. 跳过声明页；
 %   4. 跳过答辩委员会页（主席/委员姓名不进入盲审稿）。
+%
+% 说明：这里用 \renewcommand 而非 \RenewDocumentCommand 覆盖 Getter。
+% 因为回归测试用 \ASSERT（内部 \edef）比较 Getter 展开值，
+% 而 \RenewDocumentCommand 生成的 xparse 命令不可 \edef 展开
+% （\edef 后仍是命令名而非其内容），导致断言恒失败。
+% 改用 \renewcommand 后 \GetAuthor 退化为普通宏，可直接 \edef 为 ***。
+% 该做法与 sduthesis 仓库完全一致。
 % ============================================================
 
 % ===== 向后兼容：单独使用 blindreview 时的本科回退已由内核加载器处理 =====
@@ -44,13 +51,13 @@
 \ExplSyntaxOff
 
 %% ===== 覆盖 Getter：隐藏个人信息 =====
-%% 这些 Getter 由内核 \NewDocumentCommand 定义，
-%% 需用 \RenewDocumentCommand 覆盖（\renewcommand 无法覆盖 xparse 命令）。
-\RenewDocumentCommand\GetAuthor{} {***}
-\RenewDocumentCommand\GetStudentId{} {***}
-\RenewDocumentCommand\GetSupervisor{} {***}
-\RenewDocumentCommand\GetCommitteeChair{} {***}
-\RenewDocumentCommand\GetCommitteeMembers{} {***}
+%% 用 \renewcommand 覆盖（与 sduthesis 一致），
+%% 使 Getter 退化为普通宏，可被回归测试的 \ASSERT(\edef) 展开比较。
+\renewcommand{\GetAuthor}{***}
+\renewcommand{\GetStudentId}{***}
+\renewcommand{\GetSupervisor}{***}
+\renewcommand{\GetCommitteeChair}{***}
+\renewcommand{\GetCommitteeMembers}{***}
 
 %% ===== 跳过声明页 =====
 \renewcommand{\makestatement}{%

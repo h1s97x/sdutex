@@ -14,11 +14,11 @@ unpack:
 	@mv src/sduthesis.cls build/ 2>/dev/null || true
 	@echo "解包完成"
 
-# CI 门禁测试：运行 l3build 回归测试套件（.tex/.tlg，xetex/luatex 双引擎），
+# CI 门禁测试：运行 l3build 回归测试套件（.tex/.tlg，XeTeX 引擎，对齐 sduthesis），
 # 对齐 sduthesis 的设计。l3build 负责解包、TDS 布局与测试编译，
 # 无需手工维护解包/拷贝步骤，避免反复修补缺失宏包的脆弱逻辑。
 test:
-	@echo "=== 运行 l3build 回归测试 (xetex/luatex 双引擎) ==="
+	@echo "=== 运行 l3build 回归测试 (XeTeX 引擎) ==="
 	@if command -v l3build > /dev/null 2>&1; then \
 		l3build check; \
 	else \
@@ -72,7 +72,7 @@ help:
 	@echo ""
 	@echo "用法:"
 	@echo "  make unpack    解包 DTX 文件生成 .cls"
-	@echo "  make test      运行 l3build 回归测试（CI 门禁，xetex/luatex 双引擎）"
+	@echo "  make test      运行 l3build 回归测试（CI 门禁，XeTeX 引擎）"
 	@echo "  make install   安装到用户 TeX 目录"
 	@echo "  make ctan      生成 CTAN 发布包"
 	@echo "  make clean     清理生成的文件"

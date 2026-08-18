@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **修复 `make test` CI 门禁反复失败（issue #35 / PR #40）**：
+  - 盲审模块 Getter 覆盖改用 `\renewcommand`（而非 `\RenewDocumentCommand`）。回归测试的 `\ASSERT` 内部用 `\edef` 比较 Getter 展开值，而 `\RenewDocumentCommand` 生成的 xparse 命令不可 `\edef` 展开，导致 `\GetAuthor` 等断言恒失败；与 sduthesis 仓库一致改为 `\renewcommand` 后盲审掩码断言恢复通过。
+  - l3build 回归仅跑 **XeTeX** 引擎（`checkengines` 由 `{xetex, luatex}` 改为 `{xetex}`）。`.tlg` 基线由 sduthesis 的 XeTeX 生成，模板源码也仅加载 XeTeX 专用 `xeCJKfntef`；加入 luatex 会因缺少 luatex 基线导致 `l3build check` 全部失败，与 sduthesis 设计一致只测 XeTeX。
+
 ## [2.2.0] - 2026-08-18
 
 ### Changed

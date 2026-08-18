@@ -62,8 +62,10 @@ tdslocations = {
   "tex/latex/sdutex/sduthesis-blindreview.sty",
 }
 
--- 双引擎测试（xetex/luatex），核心包兼容两种编译引擎
-checkengines = {"xetex", "luatex"}
+-- 只测试 XeTeX 引擎（模板只用 xelatex，源码仅加载 XeTeX 专用 xeCJKfntef）。
+-- 与 sduthesis 仓库保持一致：testfiles 的 .tlg 基线均为 XeTeX 生成，
+-- 若加入 luatex 会因缺少 luatex 基线导致 l3build check 全部失败。
+checkengines = {"xetex"}
 stdengine = "xetex"
 
 -- 编译选项
