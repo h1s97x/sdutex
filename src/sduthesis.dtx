@@ -1,6 +1,409 @@
-\NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{sduthesis}[2026/08/18 1.1.0 Shandong University Thesis Template]
-
+% \iffalse
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage[UTF8]{ctex}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  language={},
+  columns=flexible,
+}
+\setcounter{StandardModuleDepth}{1}
+\providecommand\LaTeX3{LaTeX3}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{sduthesis.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \changes{v1.1.0}{2026/08/18}{使用手册随 dtx 文档化，发版时由流水线编译生成 PDF}
+%
+% ===================================================================
+%  SDUTeX 中文使用手册
+% ===================================================================
+%
+% \section{项目简介}
+%
+% SDUTeX 是山东大学学位论文 \LaTeX{} 模板的核心代码仓库，旨在为山东大学
+% 师生提供一套符合学校学位论文格式规范、开箱即用且可扩展的 \LaTeX{}
+% 工具集。它支持本科、硕士、专业硕士、博士四种学位类型，支持中英文双语
+% 写作、盲审模式、图表目录自动生成与 GB/T 7714--2015 参考文献格式。
+%
+% 项目基于 \LaTeX3{}（\texttt{expl3}）现代化语法开发，采用
+% 「内核 + 模块 + Hook」的插件化架构，并配有 \texttt{l3build} 自动化测试
+% 体系，在 XeLaTeX 与 LuaLaTeX 双引擎下均可编译。
+%
+% \subsection{核心产物}
+%
+% \begin{tabular}{lll}
+%   \toprule
+%   产物文件 & 类型 & 说明 \\
+%   \midrule
+%   \texttt{sduthesis.cls} & 文档类 & 学位论文文档类（核心引擎） \\
+%   \texttt{sdutex.sty}    & 宏包   & 工具宏包（数学/浮动体/格式工具） \\
+%   \texttt{sduthesis.bst} & BibTeX & GB/T 7714--2015 参考文献样式 \\
+%   \texttt{modules/*.sty} & 模块   & 学位类型与盲审模块（4 个） \\
+%   \bottomrule
+% \end{tabular}
+%
+% \subsection{技术栈}
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   分类 & 技术 \\
+%   \midrule
+%   编程语言 & \LaTeX3{} (\texttt{expl3})、\TeX{}、BibTeX \\
+%   构建系统 & \texttt{l3build} (Lua)、GNU Make \\
+%   文档格式 & DTX（Documented \LaTeX{} sources） \\
+%   测试引擎 & XeLaTeX、LuaLaTeX \\
+%   \bottomrule
+% \end{tabular}
+%
+% \section{安装}
+%
+% \subsection{环境要求}
+%
+% 推荐安装 TeX Live 2024 或更新版本。Windows / macOS / Linux 均可使用。
+%
+% \subsection{从源码安装}
+%
+% \begin{lstlisting}
+% # 解包 DTX 文件
+% l3build unpack
+%
+% # 安装到本地 TeX 目录
+% l3build install
+% \end{lstlisting}
+%
+% \subsection{直接使用}
+%
+% 将 \texttt{src/} 目录下的 \texttt{.cls}、\texttt{.sty}、\texttt{.bst}
+% 文件复制到你的项目目录即可直接使用。
+%
+% \subsection{构建命令}
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   命令 & 说明 \\
+%   \midrule
+%   \texttt{make}        & 解包并生成文件 \\
+%   \texttt{make install} & 安装到本地 TeX 目录 \\
+%   \texttt{make test}   & 运行测试 \\
+%   \texttt{make clean}  & 清理生成的文件 \\
+%   \texttt{l3build check / ctan / tds} & 测试 / 打包 CTAN / 打包 TDS \\
+%   \bottomrule
+% \end{tabular}
+%
+% \section{快速开始}
+%
+% \subsection{方式一：推荐（info 分组键值）}
+%
+% 使用 \texttt{info} 分组键值，中英双语在同一条目下集中配置，写法对齐
+% SJTUTeX：
+%
+% \begin{lstlisting}
+% \documentclass[degree=bachelor]{sduthesis}
+%
+% \SDUSetup{
+%   info = {
+%     zh/title = {基于深度学习的图像识别研究},
+%     en/title = {Research on Deep Learning based Image Recognition},
+%     zh/author = {张三},
+%     en/author = {Zhang San},
+%     zh/school = {计算机科学与技术学院},
+%     zh/major = {计算机科学与技术},
+%     en/major = {Computer Science and Technology},
+%     zh/supervisor = {李教授},
+%     zh/supervisor-title = {教授},
+%     zh/student-id = {2021001234},
+%     zh/date = {2025年6月},
+%     zh/keywords = {深度学习, 图像识别},
+%     en/keywords = {Deep Learning, Image Recognition}
+%   }
+% }
+%
+% \begin{document}
+% % 生成封面
+% \MakeCover
+%
+% % 中文摘要
+% \begin{cnabstract}
+% 本文研究了基于深度学习的图像识别方法...
+% \end{cnabstract}
+%
+% % 英文摘要
+% \begin{enabstract}
+% This paper studies image recognition methods...
+% \end{enabstract}
+%
+% % 目录与图表目录
+% \tableofcontents
+% \ListOfFigures
+% \ListOfTables
+%
+% % 正文
+% \chapter{引言}
+% ...
+% \end{document}
+% \end{lstlisting}
+%
+% \subsection{方式二：旧式写法（向后兼容）}
+%
+% \begin{lstlisting}
+% \documentclass[degree=bachelor]{sduthesis}
+%
+% \SDUSetup{
+%   title = {基于深度学习的图像识别研究},
+%   title* = {Research on Deep Learning based Image Recognition},
+%   author = {张三},
+%   author* = {Zhang San},
+%   school = {计算机科学与技术学院},
+%   major = {计算机科学与技术},
+%   supervisor = {李教授},
+%   supervisor-title = {教授},
+%   student-id = {2021001234},
+%   date = {2025年6月}
+% }
+%
+% \begin{document}
+% \MakeCover
+% \begin{cnabstract} 摘要内容... \end{cnabstract}
+% \begin{enabstract} Abstract... \end{enabstract}
+% \tableofcontents
+% \chapter{引言}
+% ...
+% \end{document}
+% \end{lstlisting}
+%
+% \subsection{编译方式}
+%
+% 使用 XeLaTeX 或 LuaLaTeX 编译（需携带 bibtex 处理参考文献）：
+%
+% \begin{lstlisting}
+% xelatex main.tex
+% bibtex   main
+% xelatex  main.tex
+% xelatex  main.tex
+% \end{lstlisting}
+%
+% \section{配置选项}
+%
+% \subsection{文档类选项}
+%
+% \begin{tabular}{lll}
+%   \toprule
+%   选项 & 值 & 说明 \\
+%   \midrule
+%   \texttt{degree}      & bachelor / master / professional / doctor & 学位类型 \\
+%   \texttt{blind}       & true / false & 盲审模式 \\
+%   \texttt{twoside}     & true / false & 双面打印 \\
+%   \texttt{lang}        & zh / en / zh-en / en-zh & 文档语言 \\
+%   \texttt{math-style}  & ISO / GB / french / upright & 数学风格 \\
+%   \texttt{preset}      & sdu / sjtu / none & 预设风格 \\
+%   \texttt{module}      & 逗号分隔列表 & 组合加载模块 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \begin{quote}
+% \textbf{注意：} \texttt{math-style}（及 \texttt{preset}）作为文档类选项在
+% 类加载时即生效；若在导言区通过 \texttt{\textbackslash SDUSetup\{ math-style
+% = ... \}} 修改，仅对后续设置生效，不会重新触发类加载时的样式调整。
+% \end{quote}
+%
+% \subsection{info 分组键值}
+%
+% 支持的键值包括：\texttt{zh/title}、\texttt{en/title}、
+% \texttt{zh/author}、\texttt{en/author}、\texttt{zh/student-id}、
+% \texttt{zh/school}、\texttt{zh/major}、\texttt{en/major}、
+% \texttt{zh/supervisor}、\texttt{zh/supervisor-title}、
+% \texttt{en/supervisor}、\texttt{zh/co-supervisor}、
+% \texttt{en/co-supervisor}、\texttt{zh/date}、\texttt{zh/keywords}、
+% \texttt{en/keywords}。
+%
+% \subsection{页眉配置}
+%
+% 通过 \texttt{header-left} / \texttt{header-right} 配置页眉左右内容，并
+% 可使用 \texttt{sduthesis} 页眉样式（默认左侧标题、右侧章节名）。
+%
+% \section{插件化架构（内核 + 模块 + Hook）}
+%
+% SDUTeX v1.1.0 采用「内核 + 模块 + Hook」插件化架构。核心包
+% \texttt{sduthesis} 只负责引擎、Hook 与基础排版，学位类型相关逻辑（封面
+% / 盲审）由独立模块承载。
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   模块文件 & 对应学位类型 \\
+%   \midrule
+%   \texttt{sduthesis-undergraduate.sty} & 本科 \\
+%   \texttt{sduthesis-master.sty}        & 硕士 / 专业硕士 \\
+%   \texttt{sduthesis-doctor.sty}        & 博士 \\
+%   \texttt{sduthesis-blindreview.sty}   & 盲审 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \subsection{组合加载 module=}
+%
+% \begin{lstlisting}
+% \documentclass{sduthesis}
+%
+% \SDUSetup{
+%   module = {master, blindreview},   % 硕士 + 盲审
+%   title = {...},
+%   ...
+% }
+% \end{lstlisting}
+%
+% \subsection{内置 Hook}
+%
+% 内核提供 6 个命名 Hook 供扩展：\texttt{after-setup}、
+% \texttt{before-cover}、\texttt{cover-style}、\texttt{frontmatter/begin}、
+% \texttt{mainmatter/begin}、\texttt{backmatter/begin}。
+%
+% \section{命令与环境参考}
+%
+% \subsection{核心命令}
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   命令 & 说明 \\
+%   \midrule
+%   \texttt{\textbackslash MakeCover}        & 生成封面（旧式 \texttt{\textbackslash makecover} 已弃用） \\
+%   \texttt{\textbackslash MakeDeclaration} & 生成声明页（旧式 \texttt{\textbackslash makedeclaration} 已弃用） \\
+%   \texttt{\textbackslash ListOfFigures}    & 生成图表目录（图） \\
+%   \texttt{\textbackslash ListOfTables}     & 生成图表目录（表） \\
+%   \texttt{\textbackslash MakeAppendix}     & 进入附录环境 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \subsection{摘要与环境}
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   环境 / 命令 & 说明 \\
+%   \midrule
+%   \texttt{cnabstract}      & 中文摘要（支持可选参数自定义标题） \\
+%   \texttt{enabstract}      & 英文摘要 \\
+%   \texttt{acknowledgement} & 致谢环境 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \subsection{定理环境}
+%
+% 内置丰富的定理环境：\texttt{definition}（定义）、\texttt{theorem}（定理）、
+% \texttt{lemma}（引理）、\texttt{corollary}（推论）、\texttt{proposition}
+% （命题）、\texttt{proof}（证明）、\texttt{assumption}（假设）、
+% \texttt{conjecture}（猜想）、\texttt{remark}（注）、\texttt{example}（例）。
+% 所有定理环境均带章节编号。
+%
+% \subsection{Getter 命令}
+%
+% 提供便捷的取值命令：\texttt{\textbackslash GetLang}、
+% \texttt{\textbackslash GetMathStyle}、\texttt{\textbackslash GetPreset}、
+% \texttt{\textbackslash GetDegreeName}、\texttt{\textbackslash GetDegreeNameEn}、
+% \texttt{\textbackslash GetSupervisorEn}、\texttt{\textbackslash GetCoSupervisorEn}。
+%
+% \section{旧式命令兼容}
+%
+% 为向后兼容，以下旧式命令仍可使用，但推荐统一使用
+% \texttt{\textbackslash SDUSetup} 现代化接口。
+%
+% \begin{tabular}{lll}
+%   \toprule
+%   旧式命令 & 等价新写法 & 说明 \\
+%   \midrule
+%   \texttt{\textbackslash title\{...\}}       & \texttt{\textbackslash SDUSetup\{title=\{...\}\}} & 中文标题 \\
+%   \texttt{\textbackslash title*\{...\}}      & \texttt{\textbackslash SDUSetup\{title*=\{...\}\}} & 英文标题 \\
+%   \texttt{\textbackslash author\{...\}}      & \texttt{\textbackslash SDUSetup\{author=\{...\}\}} & 作者 \\
+%   \texttt{\textbackslash degree\{...\}}      & 文档类选项 degree= & 学位类型 \\
+%   \texttt{\textbackslash school\{...\}}      & \texttt{\textbackslash SDUSetup\{school=\{...\}\}} & 学院 \\
+%   \texttt{\textbackslash major\{...\}}       & \texttt{\textbackslash SDUSetup\{major=\{...\}\}} & 专业 \\
+%   \texttt{\textbackslash supervisor\{...\}}  & \texttt{\textbackslash SDUSetup\{supervisor=\{...\}\}} & 导师 \\
+%   \texttt{\textbackslash date\{...\}}        & \texttt{\textbackslash SDUSetup\{date=\{...\}\}} & 日期 \\
+%   \texttt{\textbackslash studentid\{...\}}   & \texttt{\textbackslash SDUSetup\{student-id=\{...\}\}} & 学号 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \begin{quote}
+% \textbf{注意：} 旧式命令（除 \texttt{\textbackslash makecover} /
+% \texttt{\textbackslash makedeclaration} 外）已标记为弃用，新文档请统一使用
+% \texttt{\textbackslash SDUSetup} + \texttt{\textbackslash MakeCover} /
+% \texttt{\textbackslash MakeDeclaration} 现代化接口。
+% \end{quote}
+%
+% \section{目录结构}
+%
+% \begin{lstlisting}
+% sdutex/
+% ├── src/                    # 源代码
+% │   ├── sduthesis.dtx       # 论文文档类（DTX 格式）
+% │   ├── sduthesis.ins       # 安装脚本
+% │   ├── sdutex.sty          # 工具宏包
+% │   └── sduthesis.bst       # 参考文献样式
+% ├── modules/                # 学位类型与盲审模块
+% ├── test/                   # 测试用例
+% ├── doc/                    # 开发者文档
+% ├── Makefile
+% ├── build.lua              # l3build 配置
+% └── README.md
+% \end{lstlisting}
+%
+% \section{常见问题（FAQ）}
+%
+% \paragraph{Q：解包失败怎么办？}
+% 请确保已安装 \texttt{l3build}，可通过 \texttt{tlmgr install l3build} 安装。
+%
+% \paragraph{Q：编译报错 "File not found"？}
+% 请重新执行 \texttt{l3build install} 安装相关文件。
+%
+% \paragraph{Q：测试不通过？}
+% 请检查 TeX Live 版本，推荐使用 TeX Live 2024。可运行
+% \texttt{texlua -v} 查看版本。
+%
+% \paragraph{Q：字体在部分平台无法渲染？}
+% 字体配置已做平台回退：Windows 使用系统字体，Linux/macOS 回退到
+% TeX Gyre，以保证 CI 可编译。
+%
+% \section{参考资料与致谢}
+%
+% \subsection{文档}
+%
+% \begin{itemize}
+%   \item 开发者指南：\texttt{doc/DEVELOP.md}
+%   \item 架构设计：\texttt{doc/ARCHITECTURE.md}
+%   \item 内部实现：\texttt{doc/INTERNALS.md}
+%   \item 项目概述：\texttt{doc/README.md}
+% \end{itemize}
+%
+% \subsection{相关项目}
+%
+% \begin{tabular}{ll}
+%   \toprule
+%   项目 & 说明 \\
+%   \midrule
+%   \texttt{sduthesis} & 示例模板仓库 \\
+%   \texttt{sdubeamer} & Beamer 幻灯片模板 \\
+%   \bottomrule
+% \end{tabular}
+%
+% \subsection{致谢}
+%
+% 本项目参考了 SJTUThesis、THUThesis、zjuthesis 等优秀的 \LaTeX{}
+% 模板。本项目采用 \LaTeX{} Project Public License (LPPL) 许可证。
+%
+% ===================================================================
+%  Class 源码文档（由 docstrip 解包生成 sduthesis.cls）
+% ===================================================================
+%
 %% \iffalse
 %%
 %% ===================================================================
@@ -29,6 +432,33 @@
 %%   https://github.com/h1s97x/sdutex
 %%
 %% \fi
+%%
+%% ===================================================================
+%% Class Structure
+%% ===================================================================
+%%
+%% This document class implements the *kernel* of the SDUTeX plugin
+%% architecture:
+%%
+%%   1. Engine + base class loading + basic layout
+%%   2. The SDUTeX Hook system (6 named hooks)
+%%   3. Module loader (``module = {...}'') triggered at begindocument
+%%
+%% All degree-specific logic (cover pages, blind-review hiding, etc.)
+%% has been moved out into the companion ``modules/*.sty'' files so that
+%% the kernel stays degree-agnostic and acts as the single source of
+%% truth.
+%%
+%% \subsection{Class Identity}
+%%
+%% \changes{v1.1.0}{2026/08/18}{Kernel + modules + hooks architecture}
+
+%% Class header: \NeedsTeXFormat{} and \ProvidesClass{}
+%%    \begin{macrocode}
+%<!CLASS>
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesClass{sduthesis}[2026/08/18 1.1.0 Shandong University Thesis Template]
+%    \end{macrocode}
 %%
 %% ===================================================================
 %% Class Structure
@@ -993,6 +1423,7 @@
 \counterwithin{assumption}{chapter}
 \counterwithin{conjecture}{chapter}
 \counterwithin{example}{chapter}
+%    \end{macrocode}
 %%
 %% Message definitions.
 %%    \begin{macrocode}
@@ -1012,5 +1443,5 @@
 \ExplSyntaxOff
 %    \end{macrocode}
 %%
-%% \Finale
-%% \endinput
+\Finale
+\endinput

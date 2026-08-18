@@ -1,7 +1,7 @@
 # SDUTeX Makefile
 # 山东大学 LaTeX 论文模板核心包
 
-.PHONY: all test test-l3 unpack clean install ctan help
+.PHONY: all test test-l3 unpack clean install ctan manual help
 
 # 默认目标
 all: test
@@ -80,6 +80,17 @@ ctan:
 	cp modules/*.sty tlpkg/sdutex/tex/latex/sdutex/
 	cd tlpkg && zip -r ../sdutex-ctan.zip sdutex
 	@echo "CTAN 包已生成: sdutex-ctan.zip"
+
+# 编译中文使用手册（由 dtx 文档化内容生成）
+manual:
+	@echo "编译中文使用手册（由 sduthesis.dtx 文档化内容生成）..."
+	@mkdir -p build
+	cd build && pdflatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	cd build && makeindex -s gind.ist -o sduthesis.ind sduthesis.idx 2>/dev/null || true
+	cd build && makeindex -s gglo.ist -o sduthesis.gls sduthesis.glo 2>/dev/null || true
+	cd build && pdflatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	@ls -la build/sduthesis.pdf
+	@echo "使用手册已生成: build/sduthesis.pdf"
 
 # 清理所有生成文件
 clean:

@@ -106,7 +106,7 @@ $:
             set -e
             cnb issues add-assignees --assignees $ISSUE_ASSIGNEE
 
-  # Tag 发布：构建 CTAN 发布包 + 创建 Release（v* tag 触发）
+  # Tag 发布：构建 CTAN 发布包 + 编译使用手册 PDF + 创建 Release（v* tag 触发）
   tag_push:
     - name: release
       docker:
@@ -114,6 +114,8 @@ $:
       stages:
         - name: build ctan
           script: make ctan
+        - name: build manual
+          script: make manual
         - name: create release
           type: git:release
           options:
@@ -123,5 +125,6 @@ $:
           settings:
             attachments:
               - "./sdutex-ctan.zip"
+              - "./build/sduthesis.pdf"
               - "./LICENSE"
               - "./README.md"
