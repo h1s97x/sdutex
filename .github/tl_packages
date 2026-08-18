@@ -9,6 +9,7 @@ l3keys2e
 latex
 latex-bin
 xetex
+luatex
 tex-ini-files
 unicode-data
 knuth-lib
@@ -55,8 +56,11 @@ graphics
 fancyhdr
 hyperref
 etoolbox
+setspace
 algorithm
 algorithmicx
+float
+ifthen
 luatexja
 luaotfload
 luatexbase

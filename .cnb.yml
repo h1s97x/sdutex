@@ -65,6 +65,18 @@ main:
 
 # 兜底分支：web_trigger / issue.* / tag_push 等事件
 $:
+  # 手动触发验证：l3build ctan 构建 CTAN 发布包（发布前置验证）
+  api_trigger:
+    - name: verify-l3build-ctan
+      docker:
+        image: texlive/texlive:latest
+      stages:
+        - name: run l3build ctan
+          script: |
+            set -e
+            l3build ctan
+            ls -la sdutex-ctan.zip
+
   # 手动触发：从 GitHub 拉取（GitHub → CNB）
   # 使用官方 tencentcom/git-sync 插件 + sync_mode: pull，按钮见 .cnb/web_trigger.yml
   web_trigger_pull_from_github:

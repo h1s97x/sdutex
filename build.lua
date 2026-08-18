@@ -29,8 +29,8 @@ installfiles = {"*.cls", "*.sty", "*.def", "*.bst",
 
 -- 文档生成
 typesetexe = "xelatex"
-typesetfiles = {"src/sduthesis.dtx"}
-typesetsuppfiles = {"support/ctxdoc.cls"}
+typesetfiles = {}
+typesetsuppfiles = {}  -- dtx 为纯代码（无文档驱动），跳过 doc 编译；CTAN 包不含手册 PDF
 
 -- BibTeX/Biber 设置
 bibtexexe = "bibtex"
@@ -39,7 +39,7 @@ biberopts = "--quiet"
 
 -- 解包设置
 unpackexe = "luatex"
-unpackfiles = {"src/sduthesis.dtx"}
+unpackfiles = {"sduthesis.ins"}
 
 -- 测试设置
 checkruns = 3

@@ -2,7 +2,7 @@
 
 > 山东大学 LaTeX 论文模板核心包 | Shandong University LaTeX Thesis Template Core Package
 >
-> 版本：v1.1.0 | 最后更新：2024/12/01
+> 版本：v1.1.0 | 最后更新：2026/08/18
 
 ---
 
