@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/**'
       - 'test/**'
+      - 'modules/**'
+      - 'figures/**'
       - 'Makefile'
       - 'build.lua'
       - '.github/tl_packages'
@@ -14,6 +16,8 @@ on:
     paths:
       - 'src/**'
       - 'test/**'
+      - 'modules/**'
+      - 'figures/**'
       - 'Makefile'
       - 'build.lua'
       - '.github/tl_packages'
