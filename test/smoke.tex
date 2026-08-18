@@ -1,0 +1,66 @@
+% SDUTeX 综合编译验证（smoke test）
+% 独立于 l3build 回归测试，用于 CI 快速验证核心包可解包、可编译。
+% 覆盖：模块加载、info/option 配置、封面、摘要、目录、附录、致谢。
+\documentclass{sduthesis}
+
+\SDUSetup{
+  module = {undergraduate},
+  info = {
+    title      = {基于深度学习的图像识别研究},
+    author     = {张三},
+    studentId  = {2021001234},
+    school     = {计算机科学与技术学院},
+    major      = {计算机科学与技术},
+    supervisor = {李四 教授},
+    year       = {2025},
+    month      = {6},
+  },
+  option = {
+    lineSpread = 1.5,
+  },
+}
+
+\begin{document}
+
+\frontmatter
+\makecoverpage
+
+\begin{cnabstract}
+本文研究基于深度学习的图像识别方法。
+\cnkeywords{深度学习, 图像识别}
+\end{cnabstract}
+
+\begin{enabstract}
+This paper studies image recognition based on deep learning.
+\enkeywords{Deep Learning, Image Recognition}
+\end{enabstract}
+
+\maketable
+
+\mainmatter
+\chapter{引言}
+这是引言。
+
+\section{研究背景}
+这是研究背景。
+
+\begin{equation}
+  a^2 + b^2 = c^2
+\end{equation}
+
+\chapter{方法}
+这是一个方法章节。
+
+% 附录
+\begin{myappendix}
+\chapter{附录A}
+附录内容。
+\end{myappendix}
+
+\backmatter
+
+\begin{myacknowledgement}
+感谢。
+\end{myacknowledgement}
+
+\end{document}

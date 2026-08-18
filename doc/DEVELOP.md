@@ -88,8 +88,9 @@ src/
 | `c_` | 常量 (constant) |
 | `g_` | 全局 (global) |
 | `l_` | 局部 (local) |
-| `l__sdut_` | SDUTeX 局部变量 |
-| `g__sdut_` | SDUTeX 全局变量 |
+| `l__sdu_` | SDUTeX 局部变量（模块前缀 `sdu`） |
+
+内核配置变量统一使用 `\l__sdu_<名称>_tl`（局部变量），配合 l3keys 存储论文信息、学位信息、样式与模块状态。
 
 ### 类型后缀
 
@@ -156,13 +157,17 @@ src/
 
 ### 编写测试
 
-在 `test/` 目录下创建测试文件：
+本项目采用 l3build `.tex/.tlg` 回归测试，在 `test/` 目录下创建测试文件，通过 `\input{regression-test}` + `\START/\END` 产生可对比的基线：
 
 ```latex
-\documentclass[degree=bachelor]{sduthesis}
+\documentclass{sduthesis}
+\input{setup-test}
+\input{regression-test}
 
 \begin{document}
-% 测试内容
+\START
+\makecoverpage
+\END
 \end{document}
 ```
 
@@ -199,8 +204,8 @@ l3build check
 
 1. 更新版本号：
    ```bash
-   # 在 sduthesis.dtx 中更新
-   \ProvidesClass{sduthesis}[2024/12/01 1.0.0 Shandong University Thesis Template]
+   # 在 src/sduthesis.dtx 中更新（含 dtx 头部 \date 与 \ProvidesClass）
+   \ProvidesClass{sduthesis}[2026/08/18 v2.2.0 Thesis template for Shandong University]
    ```
 
 2. 更新 CHANGELOG.md

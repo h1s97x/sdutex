@@ -1,173 +1,88 @@
 #!/usr/bin/env texlua
 
---
--- SDUTeX l3build configuration
+-- l3build configuration for SDUTeX
 -- 山东大学 LaTeX 核心包构建系统
---
+-- Reference: https://github.com/tuna/thuthesis (build.lua)
 
 module = "sdutex"
 
--- 源代码目录
-sourcefiledir = "src"
-sourcefiles = {"sduthesis.dtx", "sduthesis.ins"}
+-- 测试支持文件目录（放测试用到的公共 .tex 文件）
+supportdir = "./test/support"
 
--- 模块目录
-modulefiledir = "modules"
-modulefiles = {
-  "sduthesis-undergraduate.sty",
-  "sduthesis-master.sty",
-  "sduthesis-doctor.sty",
-  "sduthesis-blindreview.sty"
+-- DTX 源码在 src/ 目录下，unpack 时需要指定源码路径
+-- l3build 的 sourcefiles 是相对于 build.lua 所在目录
+unpackdir = "./build/unpacked"
+sourcefiles = {"src/*.dtx", "src/*.ins"}
+
+-- 将模块目录与解包目录加入 TeX 搜索路径（l3build 的 tdsdirs 机制）。
+-- testfiles 在 build/test 隔离目录下编译，必须通过 tdsdirs 暴露模板依赖，
+-- 否则 xelatex 找不到 sduthesis.cls / modules/*.sty。
+tdsdirs = {
+  ["./modules"]         = "tex/latex/sdutex",
+  ["./build/unpacked"]  = "tex/latex/sdutex",
+  ["./figures"]         = "tex/latex/sdutex/figures",
 }
 
--- 安装文件
-installfiles = {"*.cls", "*.sty", "*.def", "*.bst",
-  "../modules/sduthesis-undergraduate.sty",
-  "../modules/sduthesis-master.sty",
-  "../modules/sduthesis-doctor.sty",
-  "../modules/sduthesis-blindreview.sty"}
+-- 安装到 TeX 目录结构（TDS）的文件
+-- unpack 产物（sduthesis.cls）直接位于 unpackdir 根目录。
+-- 注意：installfiles 路径相对 unpackdir（build/unpacked）解析，
+-- "../modules/*.sty" 会指向 build/modules 导致 CTAN/TDS 缺模块，
+-- 故模块文件一律并入下方 textfiles（相对 build.lua 所在目录解析）。
+installfiles = {"*.cls"}
 
--- 文档生成
-typesetexe = "xelatex"
-typesetfiles = {}
-typesetsuppfiles = {}  -- dtx 为纯代码（无文档驱动），跳过 doc 编译；CTAN 包不含手册 PDF
-
--- BibTeX/Biber 设置
-bibtexexe = "bibtex"
-biberexe = "biber"
-biberopts = "--quiet"
-
--- 解包设置
-unpackexe = "luatex"
-unpackfiles = {"sduthesis.ins"}
-
--- 测试设置
-checkruns = 3
--- 双引擎测试（luatex/xetex），对齐 l3build 最佳实践
-checkengines = {"xetex", "luatex"}
-checkopts = "-file-line-error -halt-on-error -interaction=nonstopmode"
-stdengine = "xetex"
-recordstatus = true
-
--- 测试文件目录
--- 使用 l3build 的 .lvt/.tlg 回归测试体系
--- 保留原有 .tex 集成测试作为补充
-unpacksearch = true
-testfiledir = "test"
-testfiles = {
-  "test_cover",
-  "test_abstract",
-  "test_math",
-  "test_float",
-  "test_module",
-  "test_info",
-  "test_lang",
-  "test_theorem",
-  "test_listoffigures",
-  "test_mathstyle"
+-- 非解包、直接从源码目录安装的文件（工具宏包 / 模块 / 参考文献样式）
+textfiles = {
+  "src/sdutex.sty",
+  "src/sduthesis.bst",
+  "modules/sduthesis-common.sty",
+  "modules/sduthesis-master.sty",
+  "modules/sduthesis-undergraduate.sty",
+  "modules/sduthesis-blindreview.sty",
 }
 
--- CTAN 发布设置
+-- 文档文件（随包发布）
+docfiles = {
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "doc",
+}
+
+-- 构建产物打包成 .tds.zip
 packtdszip = true
-ctanpkg = "sdutex"
-ctanpath = "latex/sdutex"
 
--- TDS 目录结构
+-- 指定文件在 TDS 中的正确位置
 tdslocations = {
-  "tex/latex/sdutex/sduthesis.cls",
+  "tex/latex/sdutex/*.cls",
   "tex/latex/sdutex/sdutex.sty",
   "tex/latex/sdutex/sduthesis.bst",
-  "tex/latex/sdutex/sduthesis-*.def",
+  "tex/latex/sdutex/sduthesis-common.sty",
   "tex/latex/sdutex/sduthesis-undergraduate.sty",
   "tex/latex/sdutex/sduthesis-master.sty",
-  "tex/latex/sdutex/sduthesis-doctor.sty",
-  "tex/latex/sdutex/sduthesis-blindreview.sty"
+  "tex/latex/sdutex/sduthesis-blindreview.sty",
 }
 
--- Git 版本信息
-gitverfiles = {"src/sduthesis.dtx"}
+-- 双引擎测试（xetex/luatex），核心包兼容两种编译引擎
+checkengines = {"xetex", "luatex"}
+stdengine = "xetex"
 
--- Windows shell escape
-shellescape = os.type == "windows"
-  and function(s) return s end
-  or function(s)
-    s = s:gsub([[\]], [[\\]])
-    s = s:gsub([[%$]], [[\$]])
-    return s
-  end
+-- 编译选项
+-- 注：不开 -shell-escape（testfiles 与 doc 均未使用 minted 等外部工具），收窄执行面
+checkopts = "-file-line-error -halt-on-error -interaction=nonstopmode"
 
--- Git 版本提取函数
-function extract_git_version()
-  mkdir(supportdir)
-  for _, i in ipairs(gitverfiles) do
-    for _, j in ipairs({sourcefiledir}) do
-      for _, k in ipairs(filelist(j, i)) do
-        local idfile = normalize_path(supportdir .. "/" .. jobname(k) .. ".id")
-        local file = normalize_path(j .. "/" .. k)
-        local cmdline = shellescape(
-          [[git log -1 --pretty=format:"$Id: ]] .. k .. [[ %h %ai %an <%ae> $" ]] .. file
-        )
-        local f = assert(io.popen(cmdline, "r"))
-        local id = f:read("*all")
-        f:close()
-        git_id_info[k] = id
-        f = assert(io.open(idfile, "wb"))
-        f:write(id, "\n")
-        f:close()
-      end
-    end
-  end
-end
+-- 忽略某些测试：
+-- smoke.tex 由 `make test` 单独承担（解包 + xelatex 综合编译），
+-- nested-setup.tex 为 setup-test 的组合支撑文件，二者均非独立回归用例，
+-- 且无 .tlg 基线，若不排除会导致 `l3build check`（make test-l3）因缺基线而失败。
+excludetests = {"smoke", "nested-setup"}
 
--- 替换 Git 版本
-function expand_git_version()
-  local sourcedir = tdsdir .. "/source/" .. moduledir
-  for _, i in ipairs(gitverfiles) do
-    for _, j in ipairs({sourcedir}) do
-      for _, k in ipairs(filelist(j, i)) do
-        replace_git_id(j, k)
-      end
-    end
-  end
-end
+-- 测试文件目录
+testfiledir = "test"
 
-function replace_git_id(path, file)
-  local f = assert(io.open(path .. "/" .. file, "rb"))
-  local s = f:read("*all")
-  f:close()
-  local id = assert(git_id_info[file])
-  local s, n = s:gsub([[(\GetIdInfo)%b$$]], "%1" .. id)
-  if n > 0 then
-    f = assert(io.open(path .. "/" .. file, "wb"))
-    f:write(s)
-    f:close()
-    cp(file, path, ctandir .. "/" .. ctanpkg)
-  end
-end
+-- 本项目 testfiles 使用 .tex 扩展名（非 l3build 默认的 .lvt）
+-- 测试文件通过 \input{regression-test} + \START/\END 产生可对比的 .tlg 基线
+lvtext = ".tex"
 
--- 版本标签更新
-function update_tag(file, content, tagname, tagdate)
-  local content, date = content, tagdate:gsub("%-", "/")
-  if file:match("%.dtx$") then
-    content = content:gsub("({\\ExplFileDate})%b{}", "%1{" .. tagname .. "}")
-    content = content:gsub("{%d%d%d%d/%d%d/%d%d v%S+", "{" .. date .. " v" .. tagname)
-    content = content:gsub("(\\changes){unreleased}", "%1{v" .. tagname .. "}")
-  end
-  return content
-end
-
--- 创建符号链接支持目录
-function copy_support_files()
-  mkdir(supportdir)
-end
-
--- 自定义任务：清理生成的文件
-function clean()
-  os.execute("rm -f *.cls *.sty *.def *.aux *.log *.out *.toc *.bbl *.blg *.xdv")
-  os.execute("rm -rf tlpkg/build")
-end
-
--- 自定义任务：仅解包不测试
-function unpackonly()
-  run(unpackexe, unpackopts .. " " .. getunpackfiles())
-end
+-- CTAN 发布设置
+ctanpkg = "sdutex"
+ctanpath = "latex/sdutex"

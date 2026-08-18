@@ -2,302 +2,103 @@
 
 ## 设计目标
 
-1. **简洁性**：保持代码简洁，易于理解和维护
-2. **可扩展性**：通过选项和钩子支持扩展
-3. **兼容性**：兼容主流 TeX 发行版 (TeX Live, MiKTeX)
-4. **标准化**：遵循 LaTeX3 编程规范
+1. **内核 + 模块 + Hook 插件化**：核心只负责引擎与基础排版，学位类型逻辑由模块承载
+2. **可扩展性**：通过 `\SDUSetup` 集中配置 + 命名 Hook 支持扩展
+3. **兼容性**：兼容主流 TeX 发行版（TeX Live, MiKTeX），双引擎（xetex/luatex）
+4. **标准化**：遵循 LaTeX3 编程规范与 l3keys 机制
+
+> 本架构与示例模板仓库 **sduthesis** 完全对齐（v2.2.0），二者为"核心包 / 示例模板"的单一真源关系。
 
 ## 整体架构
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    用户接口层                        │
-│         \documentclass{../src/sduthesis}            │
-│         \SDUSetup{...}                              │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────┐
-│                    配置解析层                        │
-│         l3keys 键值对解析                            │
-│         选项验证与默认值                             │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────┐
-│                    核心功能层                        │
-│         变量定义                                     │
-│         页面布局                                     │
-│         字体配置                                     │
-│         章节标题样式                                 │
-└─────────────────────────────────────────────────────┘
-                          ↓
-┌─────────────────────────────────────────────────────┐
-│                    输出生成层                        │
-│         封面生成                                     │
-│         目录生成                                     │
-│         浮动体样式                                   │
-│         参考文献样式                                 │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│           用户层 (User Layer)                │
+│   \documentclass{sduthesis} + \SDUSetup{}   │
+├─────────────────────────────────────────────┤
+│         模块层 (Module Layer)                │
+│   undergraduate / master / blindreview .sty  │
+├─────────────────────────────────────────────┤
+│           内核 (Core Engine)                 │
+│   sduthesis.cls（src/sduthesis.dtx）         │
+│   ├── SDUSetup 引擎 (l3keys)                │
+│   ├── Hook 系统（6 个文档阶段钩子）           │
+│   └── 基础排版引擎                           │
+└─────────────────────────────────────────────┘
 ```
 
 ## 核心模块
 
-### 1. 变量系统
+### 1. 存储层：变量声明
 
-#### 全局变量
+所有配置值通过 `tl`（token list）/ `dim` / `bool` 变量存储，命名规范为 `\l__sdu_<名称>_tl`（`l` 局部变量，`__sdu` 模块前缀）：
 
-| 变量名 | 类型 | 说明 |
-|--------|------|------|
-| `g_@@_type_int` | int | 学位类型 |
-| `g_@@_blind_bool` | bool | 盲审模式 |
-| `g_@@_twoside_bool` | bool | 双面打印 |
-| `g_@@_title_tl` | tl | 论文中文标题 |
-| `g_@@_author_tl` | tl | 作者姓名 |
-| `g_@@_supervisor_tl` | tl | 导师姓名 |
-
-> 注：`@@` 为内部命名空间前缀 `sdu`（参见 `doc/INTERNALS.md`）。
+- **论文信息组**：`\l__sdu_title_tl` `\l__sdu_author_tl` `\l__sdu_studentid_tl` `\l__sdu_school_tl` `\l__sdu_major_tl` `\l__sdu_supervisor_tl` `\l__sdu_year_tl` `\l__sdu_month_tl`
+- **学位信息组**（master 模块）：`\l__sdu_degree_tl` `\l__sdu_committee_chair_tl` `\l__sdu_committee_members_tl` `\l__sdu_defense_date_tl` `\l__sdu_defense_place_tl`
+- **样式组**：`\l__sdu_line_spread_dim` `\l__sdu_page_left_tl` `\l__sdu_page_right_tl` `\l__sdu_page_top_tl` `\l__sdu_page_bottom_tl`
+- **模块组**：`\l__sdu_module_tl` `\l__sdu_module_seq` `\l__sdu_module_item_tl` `\l__sdu_module_pkg_tl`
+- **盲审标志**：`\l__sdu_blindreview_bool` `\l__sdu_has_blindreview_bool` `\l__sdu_has_base_module_bool`
 
 ### 2. 配置系统
 
-使用 `l3keys2e` 包实现键值对配置：
+使用 `l3keys` 实现键值对配置，`\SDUSetup` 统一入口，支持 `info` / `option` 嵌套分组与顶层平铺两种写法：
 
 ```
 用户代码
     ↓
-\keys_define:nn { sdut }
+\SDUSetup{ module={...}, info={...}, option={...} }
     ↓
-键值解析
+\keys_set:nn { sdu } { ... }          # info/option 代理键
     ↓
-存储到变量
+\keys_set:nn { sdu/info } / sdu/option
     ↓
-在适当位置使用
+存储到 \l__sdu_* 变量
 ```
 
-### 3. 论文类型
+### 3. 模块加载器
 
-| 类型 | 值 | 说明 |
-|------|---|------|
-| bachelor | 1 | 本科毕业论文 |
-| master | 2 | 硕士学位论文 |
-| professional | 3 | 专业型硕士学位论文 |
-| doctor | 4 | 博士学位论文 |
+`module` 键支持逗号分隔列表，`\sdu_load_module:` 在 `\begin{document}` 时执行：
 
-### 4. 语言支持
+1. 分割模块列表，去空白、跳空项
+2. 预扫描：判断是否含 `blindreview`、是否已有基础模块（undergraduate/master）
+3. 若 `blindreview` 单独使用，自动前置加载本科模块
+4. 按用户顺序正式加载各模块（`\RequirePackage{sduthesis-<name>}`）
 
-| 语言 | 值 | 说明 |
-|------|---|------|
-| chinese | zh | 中文论文 |
-| english | en | 英文论文 |
+### 4. Hook 系统
 
-## 文件组织
+内核声明 6 个命名 Hook，模块通过 `\AddToHook` 注入行为：
 
-### src/sduthesis.dtx
-
-主文档类，包含所有核心功能：
-
-1. **头部 (1-100行)**
-   - 版权声明
-   - DTX 标记
-   - 依赖声明
-
-2. **变量定义 (100-200行)**
-   - 全局变量
-   - 临时变量
-
-3. **配置系统 (200-400行)**
-   - 键值选项定义
-   - 默认值设置
-
-4. **宏包加载 (400-500行)**
-   - 必要宏包
-   - 可选宏包
-
-5. **页面布局 (500-700行)**
-   - 纸张大小
-   - 页边距
-   - 行间距
-
-6. **字体配置 (700-900行)**
-   - 中文字体
-   - 英文字体
-   - 数学字体
-
-7. **章节标题 (900-1100行)**
-   - 标题样式
-   - 编号格式
-
-8. **封面生成 (1100-1500行)**
-   - 下划线渲染
-   - 封面模板
-
-9. **目录配置 (1500-1700行)**
-   - 目录样式
-   - 图表目录
-
-10. **浮动体样式 (1700-1900行)**
-    - 图表间距
-    - 公式间距
-
-### src/sdutex.sty
-
-工具宏包，提供辅助功能：
-
-1. **数学工具**
-   - 数集符号（`\SDUTN` / `\SDUTZ` / `\SDUTQ` / `\SDUTR` / `\SDUTC`）
-   - 公式引用（`\SDUT@eqref`）
-   - 定理环境增强（`\SDUT@begintheorem`）
-
-2. **浮动体工具**
-   - 间距控制
-   - 图片宏包设置
-
-3. **格式工具**
-   - 段落格式
-   - 列表样式
-
-### src/sduthesis.bst
-
-参考文献样式文件，基于 GB/T 7714-2015。
-
-## 设计决策
-
-### 决策 1：使用 DTX 格式
-
-**选择**：使用 DTX 格式管理核心代码
-
-**原因**：
-- 代码和文档合一
-- 便于生成 PDF 手册
-- 符合 LaTeX 社区规范
-
-**替代方案**：
-- 直接维护 .cls 文件（简单但无文档）
-- 分离代码和文档（增加同步成本）
-
-### 决策 2：使用 LaTeX3
-
-**选择**：使用 LaTeX3 语法
-
-**原因**：
-- 现代语法，类型安全
-- 命名规范，易读性强
-- 社区推荐
-
-### 决策 3：使用 l3keys2e
-
-**选择**：使用 l3keys2e 实现配置
-
-**原因**：
-- 标准的键值对接口
-- 支持嵌套分组
-- 易于扩展
-
-### 决策 4：内核 + 模块 + Hook 插件化架构（v1.1.0）
-
-**选择**：将 `sduthesis.dtx` 瘦身为「引擎 + Hook + 基础排版」，学位类型相关逻辑下沉到 `modules/*.sty`
-
-**原因**：
-- 核心包成为唯一真源，示例模板（sduthesis）与核心包解耦
-- 通过 Hook 与模块化，学位类型（本科/硕士/博士/盲审）可独立维护与组合
-- 支持 `module={master, blindreview}` 组合加载
-
-**替代方案**：
-- 单文件架构（所有功能集中，但不利于扩展与维护）
-
-## 扩展机制
-
-### Hook 系统
-
-内核定义 6 个命名 Hook，供模块与用户扩展：
-
-```latex
-sduthesis/after-setup
-sduthesis/before-cover
-sduthesis/cover-style
-sduthesis/frontmatter/begin
-sduthesis/mainmatter/begin
-sduthesis/backmatter/begin
-```
-
-模块通过 `\hook_gput_code:nnn` 注册代码，用户通过 `\MakeCover` / `\frontmatter` 等触发：
-
-```latex
-\hook_gput_code:nnn { sduthesis/cover-style } { undergraduate } {
-  \__sdu_cover_undergraduate:
-}
-```
-
-### 模块加载
-
-通过 `\SDUSetup{ module = {master, blindreview} }` 组合加载，或 `degree=` 选项自动映射：
-
-```latex
-\SDUSetup{ module = {master, blindreview}, ... }
-```
-
-模块在 `\AtBeginDocument` 自动加载。
-
-### 私有命令
-
-以 `@` 结尾的命令为私有命令：
-
-```latex
-\__sdu_make_cover_bachelor:
-\__sdu_make_cover_graduate:
-\__sdu_cover_entry:nn
-```
-
-### 用户接口
-
-用户通过 `\SDUSetup` 配置选项，通过 `\MakeCover` / `\MakeDeclaration` 生成页面：
-
-```latex
-% 配置封面信息
-\SDUSetup{
-  title = {...},
-  author = {...}
-}
-
-% 生成封面
-\MakeCover
-```
-
-## 性能考虑
-
-1. **延迟加载**
-   - 可选宏包延迟加载
-   - 按需启用功能
-
-2. **最小化依赖**
-   - 只加载必要的宏包
-   - 避免重复加载
-
-3. **缓存计算结果**
-   - 封面宽度计算结果缓存
-   - 减少重复计算
-
-## 兼容性
-
-### TeX Live 版本
-
-| 版本 | 支持情况 |
+| Hook | 触发时机 |
 |------|----------|
-| 2020 | ✅ 支持 |
-| 2021 | ✅ 支持 |
-| 2022 | ✅ 支持 |
-| 2023 | ✅ 支持 |
-| 2024 | ✅ 支持 |
+| `sduthesis/after-setup` | `\SDUSetup` 处理完后、begindocument |
+| `sduthesis/before-cover` | 封面生成前 |
+| `sduthesis/cover-style` | 封面样式注入 |
+| `sduthesis/frontmatter/begin` | 前言开始 |
+| `sduthesis/mainmatter/begin` | 正文开始 |
+| `sduthesis/backmatter/begin` | 后记开始 |
 
-### 编译器
+### 5. Getter 命令
 
-| 编译器 | 支持情况 |
-|--------|----------|
-| XeLaTeX | ✅ 完全支持 |
-| LuaLaTeX | ✅ 完全支持 |
-| pdfLaTeX | ⚠️ 部分支持（不支持中文） |
+内核导出 Getter 命令供模块与用户读取配置值：
+`\GetTitle` `\GetAuthor` `\GetStudentId` `\GetSchool` `\GetMajor` `\GetSupervisor` `\GetYear` `\GetMonth` `\GetDegree` `\GetCommitteeChair` `\GetCommitteeMembers` `\GetDefenseDate` `\GetDefensePlace`
 
-## 未来规划
+### 6. 盲审标志
 
-1. **v1.1**：增加参考文献多语言混排优化
-2. **v1.2**：增加在线模板生成工具
-3. **v1.3**：完善测试覆盖
-4. **v1.0**：发布 CTAN（已完成）
+`blindreview` 模块加载时置 `\l__sdu_blindreview_bool` 为真。基础模块通过 `\IfBlindReviewTF` / `\IfBlindReviewF` 决定是否隐藏作者、学号、导师等个人信息（盲审时隐藏）。
+
+## 模块划分
+
+| 模块文件 | 职责 |
+|----------|------|
+| `sduthesis-undergraduate.sty` | 本科封面、中英摘要、关键词、页眉页脚 |
+| `sduthesis-master.sty` | 硕博封面、答辩委员会页、中英摘要、页眉页脚 |
+| `sduthesis-blindreview.sty` | 盲审标志、声明页跳过 |
+
+## 参考文献
+
+- **biblatex/biber**（GB/T 7714-2015）：内核默认，`\printbib` 命令输出
+- **sduthesis.bst**（传统 LaTeX 工程）：保留作兜底
+
+## 测试体系
+
+采用 l3build `.tex/.tlg` 回归测试，覆盖 cover / abstract / appendix / bib / blindreview / master / master-blindreview / nested-setup / toc，支持 xetex/luatex 双引擎。

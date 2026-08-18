@@ -1,85 +1,112 @@
+%% sduthesis-undergraduate.sty — 本科生论文模块
 %%
-%% sduthesis-undergraduate.sty
-%% SDUTeX - 本科毕业论文模块
-%% https://github.com/h1s97x/sdutex
+%% Copyright (C) 2025 h1s97x
 %%
-%% Copyright (C) 2024 SDU LaTeX Contributors
-%%
-%% This work may be distributed and/or modified under the conditions
-%% of the LaTeX Project Public License, either version 1.3 of this
-%% license or (at your option) any later version.
-%% The latest version of this license is in
-%%   https://www.latex-project.org/lppl.txt
-%% and version 1.3c or later is part of all distributions of LaTeX
-%% version 2008-05-04 or later.
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either
+%% version 1.3c of this license or (at your option) any later
+%% version. This version of this license is in
+%%    https://www.latex-project.org/lppl/lppl-1-3c.txt
+%% and the latest version of this license is in
+%%    https://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of
+%% LaTeX version 2020/11/27 or later.
 %%
 %% This work has the LPPL maintenance status "maintained".
 %%
-%% The Current Maintainer of this work is SDU LaTeX Contributors.
+%% The Current Maintainer of this work is h1s97x.
 %%
-%% This module is part of the sduthesis plugin architecture and provides
-%% the undergraduate (bachelor) cover page.  It hooks into the kernel's
-%% ``sduthesis/cover-style'' hook.
-%%
-\NeedsTeXFormat{LaTeX2e}
-\ProvidesExplPackage{sduthesis-undergraduate}
-  {2024/12/01}{1.1.0}{Undergraduate module for sduthesis}
+\ProvidesPackage{sduthesis-undergraduate}[2026/08/18 v2.2.0 SDUThesis undergraduate module]
 
-\cs_new_protected:Npn \sdu_cover_undergraduate:
-{
-  \begin{titlepage}
+% ============================================================
+% 本科生论文模块
+% 通过 \SDUSetup{module=undergraduate} 加载
+% 负责封面、摘要、页眉页脚等本科论文特有格式
+% ============================================================
+
+% 加载公共模块：封面排版命令（\Lwidth/\Rwidth/\titlewidth/\Lcolumn/\Rcolumn）
+% 与摘要环境（cnabstract/enabstract/\cnkeywords/\enkeywords）由 common 统一提供，
+% 避免与 master 等模块组合加载时重定义冲突。
+\RequirePackage{sduthesis-common}
+
+% -------------------- 封面排版 --------------------
+\renewcommand{\makecoverpage}{
     \begin{center}
-      \vspace*{5mm}
+        \phantomsection
+        \hypertarget{coverpage}{}
+        \bookmark[dest=coverpage,level=0]{封面}
 
-      % University logo (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_logo}{
-        \includegraphics[width=0.7\textwidth]{logos/sdu_logo}
-      }{
-        \vspace*{2cm}
-        \zihao{1} \bfseries \heiti { 山东大学 }
-      }
+        \vspace*{5mm}
 
-      \vspace*{10mm}
+        \includegraphics[width=0.7\textwidth]{logos/sdu_logo_2.pdf}
 
-      % Title image (falls back gracefully if missing)
-      \IfFileExists{logos/sdu_title}{
-        \includegraphics[width=0.95\textwidth]{logos/sdu_title}
-      }{
-        \vspace*{2cm}
-        \zihao{2} \bfseries \heiti { 本科毕业论文 }
-      }
+        \vspace*{10mm}
 
-      \vspace*{5mm}
+        \includegraphics[width=0.95\textwidth]{logos/sdu_title.png}
 
-      % Thesis title label
-      \begin{flushleft}
-        \zihao{3} \bfseries \fangsong {论\qquad 文\qquad 题\qquad 目：}
-      \end{flushleft}
+        \vspace*{5mm}
 
-      % Thesis title
-      \begin{minipage}{\dim_eval:n { 0.9 \textwidth }}
-        \centering \zihao{2} \bfseries \heiti { \GetTitle }
-      \end{minipage}
+        \begin{flushleft}
+            \zihao{3}\bfsong{论文（设计）题目：}
+        \end{flushleft}
 
-      \vspace*{30mm}
+        \begin{minipage}{\titlewidth}
+            \centering
+            \zihao{-2}\bfhei{\GetTitle}
+        \end{minipage}
 
-      % Information table
-      \__sdu_cover_entry:nn { 姓\qquad 名 } { \__sdu_secret_info:n { \GetAuthor } }
-      \__sdu_cover_entry:nn { 学\qquad 号 } { \__sdu_secret_info_fixed:Nn \g__sdu_student_id_tl { 10 } }
-      \__sdu_cover_entry:nn { 学\qquad 院 } { \GetSchool }
-      \__sdu_cover_entry:nn { 专\qquad 业 } { \GetMajor }
-      \__sdu_cover_entry:nn { 指\ 导\ 教\ 师 } { \__sdu_secret_info:n { \GetSupervisor } }
+        \vspace*{30mm}
 
-      \vspace*{35mm}
+        \begin{tabular}{p{\Lwidth}p{\Rwidth}}
+            \IfBlindReviewF{\Lcolumn{姓\qquad 名} & \Rcolumn{\GetAuthor}     \\[-0.8mm]\cline{2-2}\\[-4mm]}
+            \IfBlindReviewF{\Lcolumn{学\qquad 号} & \Rcolumn{\GetStudentId}  \\[-0.8mm]\cline{2-2}\\[-4mm]}
+            \Lcolumn{学\qquad 院} & \Rcolumn{\GetSchool}     \\[-0.8mm]\cline{2-2}\\[-4mm]
+            \Lcolumn{专\qquad 业} & \Rcolumn{\GetMajor}      \\[-0.8mm]\cline{2-2}\\[-4mm]
+            \IfBlindReviewF{\Lcolumn{指导教师}      & \Rcolumn{\GetSupervisor}  \\[-0.8mm]\cline{2-2}}
+        \end{tabular}
 
-      % Date
-      \zihao{3} \kaishu { \GetDate }
+        \vspace*{35mm}
+
+        \zihao{3}\bfkai{
+          \GetYear 年 \quad
+          \GetMonth 月
+        }
     \end{center}
-  \end{titlepage}
+
+    \clearpage
 }
 
-\hook_gput_code:nnn { sduthesis/cover-style } { undergraduate } {
-  \sdu_cover_undergraduate:
+% 摘要环境与关键词命令由公共模块 sduthesis-common 统一提供
+% （cnabstract / enabstract / \cnkeywords / \enkeywords）。
+
+% -------------------- 页眉页脚 --------------------
+% 前言：空白页眉页脚
+\AddToHook{sduthesis/frontmatter/begin}{
+    \pagestyle{empty}
+}
+
+% 正文：山东大学本科毕业论文
+\AddToHook{sduthesis/mainmatter/begin}{
+    \fancypagestyle{plain}{
+      \fancyhf{}
+      \renewcommand{\headrulewidth}{0.5pt}
+      \fancyhead[C]{\zihao{-5}\songti 山东大学本科毕业论文（设计）}
+      \fancyfoot[C]{\zihao{-5}\thepage}
+    }
+    \pagestyle{plain}
+    \linespread{1.3}\selectfont
+}
+
+% 后记：不编号章标题，小二号
+\AddToHook{sduthesis/backmatter/begin}{
+    \ctexset{
+      chapter={
+        format=\centering\zihao{-2}\bfseries,
+        beforeskip=21.6pt,
+        afterskip=18pt,
+        fixskip=true,
+       }
+    }
 }
 
 \endinput

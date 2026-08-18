@@ -1,1447 +1,1132 @@
-% \iffalse
+% \iffalse meta-comment
+% SDUThesis — 山东大学学位论文 LaTeX 模板
+% Copyright (c) 2025 h1s97x
+% Released under the LaTeX Project Public License v1.3c or later
+% See https://www.latex-project.org/lppl.txt
+%
 %<*driver>
-\documentclass{ltxdoc}
-\usepackage[UTF8]{ctex}
-\usepackage{xcolor}
-\usepackage{array}
-\usepackage{longtable}
-\usepackage{booktabs}
+\documentclass[a4paper]{l3doc}
+\usepackage{ctex}
+\usepackage{hyperref}
 \usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+% l3doc 默认布局（\textwidth=385pt + \oddsidemargin 偏右 20pt）会把正文挤向右侧、
+% 且 385pt 窄栏无法容纳 61 字符的章节分隔线与三列长表格。
+% 这里用 geometry 重设对称页边距：内容水平居中、\textwidth 加宽到 ~455pt，
+% 消除正文溢出右边界与“偏右”观感。
+\usepackage[a4paper, hmargin=2.5cm, vmargin=2.5cm]{geometry}
+% CJK 段落内嵌 \texttt 长标识符（如 \texttt{module = {blindreview, master}}）时，
+% l3doc 默认排版不允许在合适位置断行，导致整行溢出。\sloppy 放宽间距容忍度，
+% 让 TeX 能找到断行点（仅影响文档排版，不影响模板代码）。
+\sloppy
+\emergencystretch=3em
+
+% 文档排版：链接统一用黑色，适配学术论文打印（黑白全黑）。
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=black,
+}
+
 \lstset{
   basicstyle=\ttfamily\small,
   breaklines=true,
-  frame=single,
-  language={},
   columns=flexible,
+  backgroundcolor=\color{gray!5},
+  frame=single,
+  rulecolor=\color{gray},
 }
-\setcounter{StandardModuleDepth}{1}
-\providecommand\LaTeX3{LaTeX3}
-\EnableCrossrefs
-\CodelineIndex
-\RecordChanges
+
 \begin{document}
   \DocInput{sduthesis.dtx}
 \end{document}
 %</driver>
 % \fi
 %
-% \changes{v1.1.0}{2026/08/18}{使用手册随 dtx 文档化，发版时由流水线编译生成 PDF}
+% \title{\textsf{SDUThesis} --- 山东大学学位论文 \LaTeX{} 模板}
+% \author{h1s97x \\ \texttt{yang1297656998@outlook.com}}
+% \date{v2.2.0 \quad 2026/08/18}
 %
-% ===================================================================
-%  SDUTeX 中文使用手册
-% ===================================================================
+% \maketitle
 %
-% \section{项目简介}
+% \begin{abstract}
+% SDUThesis 是山东大学学位论文的 \LaTeX{} 模板，支持本科毕业论文。
+% 模板采用内核+模块的插件化架构，通过 \cs{SDUSetup} 集中配置，
+% 通过 Hook 系统实现模块扩展。
+% \end{abstract}
 %
-% SDUTeX 是山东大学学位论文 \LaTeX{} 模板的核心代码仓库，旨在为山东大学
-% 师生提供一套符合学校学位论文格式规范、开箱即用且可扩展的 \LaTeX{}
-% 工具集。它支持本科、硕士、专业硕士、博士四种学位类型，支持中英文双语
-% 写作、盲审模式、图表目录自动生成与 GB/T 7714--2015 参考文献格式。
+% \tableofcontents
 %
-% 项目基于 \LaTeX3{}（\texttt{expl3}）现代化语法开发，采用
-% 「内核 + 模块 + Hook」的插件化架构，并配有 \texttt{l3build} 自动化测试
-% 体系，在 XeLaTeX 与 LuaLaTeX 双引擎下均可编译。
+% \section{简介}
 %
-% \subsection{核心产物}
+% SDUThesis 是为山东大学学位论文设计的 \LaTeX{} 模板类，致力于让
+% 论文排版从繁琐的格式细节中解放出来，让作者把精力集中在内容本身。
+% 模板在 \textsf{ctexbook} 文档类的基础上构建，原生支持中文排版，
+% 无需手工调整字号、行距、页边距等格式参数即可达到学校规范要求。
+% 通过单一的 \cs{SDUSetup} 配置命令，即可集中完成论文标题、作者、
+% 学院、专业、指导教师等全部信息的录入。
 %
-% \begin{tabular}{lll}
-%   \toprule
-%   产物文件 & 类型 & 说明 \\
-%   \midrule
-%   \texttt{sduthesis.cls} & 文档类 & 学位论文文档类（核心引擎） \\
-%   \texttt{sdutex.sty}    & 宏包   & 工具宏包（数学/浮动体/格式工具） \\
-%   \texttt{sduthesis.bst} & BibTeX & GB/T 7714--2015 参考文献样式 \\
-%   \texttt{modules/*.sty} & 模块   & 学位类型与盲审模块（4 个） \\
-%   \bottomrule
-% \end{tabular}
+% 除了开箱即用的基本功能，模板还提供了一套插件化架构。整个系统分为
+% 内核（\texttt{sduthesis.cls}）与若干可选的 \emph{模块}
+% （\texttt{modules/} 目录下的 \texttt{.sty} 文件）。内核负责提供
+% 基础排版能力与统一的配置/扩展接口，模块则针对具体场景（本科、硕士、
+% 盲审等）定制封面版式与页面内容。这种设计类似 VS Code 的扩展模式，
+% 用户可以根据自己的论文类型按需组合模块，而不必修改内核代码。
 %
-% \subsection{技术栈}
+% 模板的主要特点可归纳为：
 %
-% \begin{tabular}{ll}
-%   \toprule
-%   分类 & 技术 \\
-%   \midrule
-%   编程语言 & \LaTeX3{} (\texttt{expl3})、\TeX{}、BibTeX \\
-%   构建系统 & \texttt{l3build} (Lua)、GNU Make \\
-%   文档格式 & DTX（Documented \LaTeX{} sources） \\
-%   测试引擎 & XeLaTeX、LuaLaTeX \\
-%   \bottomrule
-% \end{tabular}
+% \begin{itemize}
+%   \item 基于 \textsf{ctexbook} 文档类，完美支持中文排版
+%   \item 插件化架构：内核 + 模块，类似 VS Code 的扩展模式
+%   \item \cs{SDUSetup} 集中配置接口，基于 LaTeX3 l3keys 机制
+%   \item Hook 系统：六个文档阶段钩子，模块可注入任意行为
+%   \item 支持盲审模式（\texttt{blindreview} 模块）
+%   \item 支持硕士学位论文（\texttt{master} 模块）
+%   \item 支持多模块组合加载（如 \texttt{master + blindreview}）
+%   \item 兼容 Overleaf 在线编辑
+% \end{itemize}
 %
-% \section{安装}
+% \section{系统要求}
 %
-% \subsection{环境要求}
+% 模板基于现代 \TeX{} 工具链构建，为保证最佳兼容性与排版效果，请使用
+% 较新版本的 \TeX{} 发行版。以下环境均为推荐配置，满足后即可直接编译：
 %
-% 推荐安装 TeX Live 2024 或更新版本。Windows / macOS / Linux 均可使用。
-%
-% \subsection{从源码安装}
-%
-% \begin{lstlisting}
-% # 解包 DTX 文件
-% l3build unpack
-%
-% # 安装到本地 TeX 目录
-% l3build install
-% \end{lstlisting}
-%
-% \subsection{直接使用}
-%
-% 将 \texttt{src/} 目录下的 \texttt{.cls}、\texttt{.sty}、\texttt{.bst}
-% 文件复制到你的项目目录即可直接使用。
-%
-% \subsection{构建命令}
-%
-% \begin{tabular}{ll}
-%   \toprule
-%   命令 & 说明 \\
-%   \midrule
-%   \texttt{make}        & 解包并生成文件 \\
-%   \texttt{make install} & 安装到本地 TeX 目录 \\
-%   \texttt{make test}   & 运行测试 \\
-%   \texttt{make clean}  & 清理生成的文件 \\
-%   \texttt{l3build check / ctan / tds} & 测试 / 打包 CTAN / 打包 TDS \\
-%   \bottomrule
-% \end{tabular}
+% \begin{itemize}
+%   \item \TeX{} Live 2024 或更高版本
+%   \item XeLaTeX 编译器
+%   \item Biber 参考文献处理器
+%   \item Fandol 字体集（\TeX{} Live 自带）
+% \end{itemize}
 %
 % \section{快速开始}
 %
-% \subsection{方式一：推荐（info 分组键值）}
+% 下面通过一个最小的可编译示例，展示使用模板完成一篇论文骨架所需的全部
+% 步骤。完整步骤分为三步：
 %
-% 使用 \texttt{info} 分组键值，中英双语在同一条目下集中配置，写法对齐
-% SJTUTeX：
+% \begin{enumerate}
+%   \item 在项目根目录放置 \texttt{main.tex}，在\emph{导言区}加载模板类并
+%         通过 \cs{SDUSetup} 录入论文基本信息；
+%   \item 在文档环境中调用封面、目录等前置命令，并撰写正文；
+%   \item 用 XeLaTeX 配合 Biber 编译，得到最终的 PDF。
+% \end{enumerate}
 %
-% \begin{lstlisting}
-% \documentclass[degree=bachelor]{sduthesis}
+% \subsection{最小示例}
 %
-% \SDUSetup{
-%   info = {
-%     zh/title = {基于深度学习的图像识别研究},
-%     en/title = {Research on Deep Learning based Image Recognition},
-%     zh/author = {张三},
-%     en/author = {Zhang San},
-%     zh/school = {计算机科学与技术学院},
-%     zh/major = {计算机科学与技术},
-%     en/major = {Computer Science and Technology},
-%     zh/supervisor = {李教授},
-%     zh/supervisor-title = {教授},
-%     zh/student-id = {2021001234},
-%     zh/date = {2025年6月},
-%     zh/keywords = {深度学习, 图像识别},
-%     en/keywords = {Deep Learning, Image Recognition}
-%   }
-% }
+% 首先创建一个主文件（如 \texttt{main.tex}），文档类声明为
+% \texttt{sduthesis}，随后用 \cs{SDUSetup} 集中配置论文信息。
+% 推荐用 \texttt{info=\{...\}} 分组收纳论文信息，\texttt{module} 键
+% 指定论文类型（此处为本科），\texttt{year}/\texttt{month} 等缺省键按需填写：
 %
-% \begin{document}
-% % 生成封面
-% \MakeCover
-%
-% % 中文摘要
-% \begin{cnabstract}
-% 本文研究了基于深度学习的图像识别方法...
-% \end{cnabstract}
-%
-% % 英文摘要
-% \begin{enabstract}
-% This paper studies image recognition methods...
-% \end{enabstract}
-%
-% % 目录与图表目录
-% \tableofcontents
-% \ListOfFigures
-% \ListOfTables
-%
-% % 正文
-% \chapter{引言}
-% ...
-% \end{document}
-% \end{lstlisting}
-%
-% \subsection{方式二：旧式写法（向后兼容）}
-%
-% \begin{lstlisting}
-% \documentclass[degree=bachelor]{sduthesis}
-%
-% \SDUSetup{
-%   title = {基于深度学习的图像识别研究},
-%   title* = {Research on Deep Learning based Image Recognition},
-%   author = {张三},
-%   author* = {Zhang San},
-%   school = {计算机科学与技术学院},
-%   major = {计算机科学与技术},
-%   supervisor = {李教授},
-%   supervisor-title = {教授},
-%   student-id = {2021001234},
-%   date = {2025年6月}
-% }
-%
-% \begin{document}
-% \MakeCover
-% \begin{cnabstract} 摘要内容... \end{cnabstract}
-% \begin{enabstract} Abstract... \end{enabstract}
-% \tableofcontents
-% \chapter{引言}
-% ...
-% \end{document}
-% \end{lstlisting}
-%
-% \subsection{编译方式}
-%
-% 使用 XeLaTeX 或 LuaLaTeX 编译（需携带 bibtex 处理参考文献）：
-%
-% \begin{lstlisting}
-% xelatex main.tex
-% bibtex   main
-% xelatex  main.tex
-% xelatex  main.tex
-% \end{lstlisting}
-%
-% \section{配置选项}
-%
-% \subsection{文档类选项}
-%
-% \begin{tabular}{lll}
-%   \toprule
-%   选项 & 值 & 说明 \\
-%   \midrule
-%   \texttt{degree}      & bachelor / master / professional / doctor & 学位类型 \\
-%   \texttt{blind}       & true / false & 盲审模式 \\
-%   \texttt{twoside}     & true / false & 双面打印 \\
-%   \texttt{lang}        & zh / en / zh-en / en-zh & 文档语言 \\
-%   \texttt{math-style}  & ISO / GB / french / upright & 数学风格 \\
-%   \texttt{preset}      & sdu / sjtu / none & 预设风格 \\
-%   \texttt{module}      & 逗号分隔列表 & 组合加载模块 \\
-%   \bottomrule
-% \end{tabular}
-%
-% \begin{quote}
-% \textbf{注意：} \texttt{math-style}（及 \texttt{preset}）作为文档类选项在
-% 类加载时即生效；若在导言区通过 \texttt{\textbackslash SDUSetup\{ math-style
-% = ... \}} 修改，仅对后续设置生效，不会重新触发类加载时的样式调整。
-% \end{quote}
-%
-% \subsection{info 分组键值}
-%
-% 支持的键值包括：\texttt{zh/title}、\texttt{en/title}、
-% \texttt{zh/author}、\texttt{en/author}、\texttt{zh/student-id}、
-% \texttt{zh/school}、\texttt{zh/major}、\texttt{en/major}、
-% \texttt{zh/supervisor}、\texttt{zh/supervisor-title}、
-% \texttt{en/supervisor}、\texttt{zh/co-supervisor}、
-% \texttt{en/co-supervisor}、\texttt{zh/date}、\texttt{zh/keywords}、
-% \texttt{en/keywords}。
-%
-% \subsection{页眉配置}
-%
-% 通过 \texttt{header-left} / \texttt{header-right} 配置页眉左右内容，并
-% 可使用 \texttt{sduthesis} 页眉样式（默认左侧标题、右侧章节名）。
-%
-% \section{插件化架构（内核 + 模块 + Hook）}
-%
-% SDUTeX v1.1.0 采用「内核 + 模块 + Hook」插件化架构。核心包
-% \texttt{sduthesis} 只负责引擎、Hook 与基础排版，学位类型相关逻辑（封面
-% / 盲审）由独立模块承载。
-%
-% \begin{tabular}{ll}
-%   \toprule
-%   模块文件 & 对应学位类型 \\
-%   \midrule
-%   \texttt{sduthesis-undergraduate.sty} & 本科 \\
-%   \texttt{sduthesis-master.sty}        & 硕士 / 专业硕士 \\
-%   \texttt{sduthesis-doctor.sty}        & 博士 \\
-%   \texttt{sduthesis-blindreview.sty}   & 盲审 \\
-%   \bottomrule
-% \end{tabular}
-%
-% \subsection{组合加载 module=}
-%
-% \begin{lstlisting}
+% \begin{lstlisting}[language={[LaTeX]TeX}]
 % \documentclass{sduthesis}
-%
 % \SDUSetup{
-%   module = {master, blindreview},   % 硕士 + 盲审
-%   title = {...},
+%   module  = undergraduate,
+%   info    = {
+%     title      = {论文题目},
+%     author     = {作者姓名},
+%     studentId  = {学号},
+%     school     = {学院},
+%     major      = {专业},
+%     supervisor = {指导教师},
+%     year       = {2025},
+%     month      = {6},
+%   },
+% }
+% \begin{document}
+% \makecoverpage
+% \maketable
+% % 正文...
+% \end{document}
+% \end{lstlisting}
+%
+% 若你沿用旧版本写法，也可以把所有键平铺在 \cs{SDUSetup} 顶层，效果相同。
+%
+% \subsection{编译命令}
+%
+% \LaTeX{} 文档的引用、目录与参考文献需要多次编译才能稳定。模板使用
+% XeLaTeX 配合 Biber 处理中文与参考文献，共需要四次编译。其中第一次
+% \texttt{xelatex} 生成辅助文件，\texttt{biber} 处理参考文献数据，
+% 后两次 \texttt{xelatex} 分别用于嵌入引用与解析交叉引用：
+%
+% \begin{enumerate}
+%   \item \texttt{xelatex main} --- 生成辅助文件
+%   \item \texttt{biber main} --- 处理参考文献
+%   \item \texttt{xelatex main} --- 嵌入引用
+%   \item \texttt{xelatex main} --- 解析交叉引用
+% \end{enumerate}
+%
+% 或使用 \texttt{just build} 一键编译。
+%
+% \section{配置参考}
+%
+% 模板的所有可配置项均通过 \cs{SDUSetup} 以\emph{键值对}的形式集中传入。
+% 配置键分为三组：\textbf{info}（论文元数据：信息 + 学位信息）、
+% \textbf{option}（排版参数）以及顶层的 \textbf{module}（指定加载哪些模块）。
+% 推荐用嵌套分组写法，语义更清晰；同时保留平铺写法，新旧代码均可用。
+%
+% \subsection{两种写法}
+%
+% \textbf{嵌套分组（推荐）}：用 \texttt{info=\{...\}} 收纳论文信息，
+% \texttt{option=\{...\}} 收纳样式参数，\texttt{module} 直接写在顶层：
+%
+% \begin{lstlisting}[language={[LaTeX]TeX}]
+% \SDUSetup{
+%   module  = undergraduate,
+%   info    = {
+%     title      = {论文题目},
+%     author     = {作者姓名},
+%     studentId  = {学号},
+%     school     = {学院},
+%     major      = {专业},
+%     supervisor = {指导教师},
+%     year       = {2025},
+%     month      = {6},
+%   },
+%   option  = { lineSpread = 1.5 },
+% }
+% \end{lstlisting}
+%
+% \textbf{平铺写法（兼容旧版）}：所有键直接平铺在顶层，行为与旧版本一致：
+%
+% \begin{lstlisting}[language={[LaTeX]TeX}]
+% \SDUSetup{
+%   module     = undergraduate,
+%   title      = {论文题目},
+%   author     = {作者姓名},
+%   lineSpread = 1.5,
+% }
+% \end{lstlisting}
+%
+% 两种写法可混用，键名不冲突：嵌套的 \texttt{info}/\texttt{option} 与
+% 顶层平铺的键都会设置到同一组内部变量上。
+%
+% \subsection{迁移对照表}
+%
+% 旧版平铺写法升级到新版嵌套写法的对照如下（未列出的键同理）：
+%
+% \begin{longtable}{ll}
+% \toprule
+% \textbf{旧写法（平铺）} & \textbf{新写法（嵌套）} \\
+% \midrule
+% \endhead
+% \texttt{title = \{...\}} & \texttt{info = \{ title = \{...\} \}} \\
+% \texttt{author = \{...\}} & \texttt{info = \{ author = \{...\} \}} \\
+% \texttt{degree = \{...\}} & \texttt{info = \{ degree = \{...\} \}} \\
+% \texttt{lineSpread = \{...\}} & \texttt{option = \{ lineSpread = \{...\} \}} \\
+% \texttt{pageLeft = \{...\}} & \texttt{option = \{ pageLeft = \{...\} \}} \\
+% \texttt{module = \{...\}} & \texttt{module = \{...\}}（位置不变） \\
+% \bottomrule
+% \end{longtable}
+%
+% \subsection{\cs{SDUSetup} 键值列表}
+%
+% 以下表格列出了所有可用的配置键（\texttt{info} 与 \texttt{option} 为
+% 分组名，键名分别位于对应子组内；顶层同时保留同名平铺键）：
+%
+% \begin{longtable}{lll}
+% \toprule
+% \textbf{键} & \textbf{默认值} & \textbf{说明} \\
+% \midrule
+% \endhead
+% \texttt{module}     & \texttt{undergraduate} & 加载的模块（逗号分隔，可多模块） \\
+% \midrule
+% \texttt{title}      & （无） & 论文题目 \\
+% \texttt{author}     & （无） & 作者姓名 \\
+% \texttt{studentId}  & （无） & 学号 \\
+% \texttt{school}     & （无） & 学院 \\
+% \texttt{major}      & （无） & 专业 \\
+% \texttt{supervisor} & （无） & 指导教师 \\
+% \texttt{year}       & （无） & 年份 \\
+% \texttt{month}      & （无） & 月份 \\
+% \midrule
+% \texttt{lineSpread} & \texttt{1.5} & 行距 \\
+% \texttt{pageLeft}   & \texttt{3cm} & 左边距 \\
+% \texttt{pageRight}  & \texttt{3cm} & 右边距 \\
+% \texttt{pageTop}    & \texttt{2.5cm} & 上边距 \\
+% \texttt{pageBottom} & \texttt{2.5cm} & 下边距 \\
+% \bottomrule
+% \end{longtable}
+%
+% \subsubsection{信息组}
+%
+% \texttt{title} 是论文的完整题目，将出现在封面与页眉等位置；
+% \texttt{author} 为作者姓名，\texttt{studentId} 为学号，
+% \texttt{school} 为所属学院，\texttt{major} 为专业名称，
+% \texttt{supervisor} 为指导教师姓名。\texttt{year} 与 \texttt{month}
+% 表示毕业年份与月份（用阿拉伯数字填写，如 \texttt{2025} 与 \texttt{6}）。
+% 这些信息大多在封面上展示，建议在文档开头一次性填写完整。
+%
+% \subsubsection{样式组}
+%
+% \texttt{lineSpread} 控制正文的行距倍数，默认 \texttt{1.5} 倍，
+% 可根据学校要求适当调整。\texttt{pageLeft}/\texttt{pageRight}/\texttt{pageTop}/
+% \texttt{pageBottom} 分别控制页面左、右、上、下的页边距，
+% 默认分别为 \texttt{3cm}/\texttt{3cm}/\texttt{2.5cm}/\texttt{2.5cm}。
+% 当学校对页边距有特殊要求时，可在 \cs{SDUSetup} 中直接覆盖。
+%
+% \subsubsection{学位信息组（master/doctor 模块）}
+%
+% 以下键仅在加载 \texttt{master} 或 \texttt{doctor} 模块时生效，
+% 用于描述学位论文的答辩相关信息：
+%
+% \begin{longtable}{ll}
+% \toprule
+% \textbf{键} & \textbf{用途} \\
+% \midrule
+% \endhead
+% \texttt{degree}            & 学位类型（默认 \texttt{硕士}，可填 \texttt{博士}） \\
+% \texttt{committeeChair}    & 答辩委员会主席姓名 \\
+% \texttt{committeeMembers}  & 答辩委员会委员姓名（多个用顿号分隔） \\
+% \texttt{defenseDate}       & 答辩日期 \\
+% \texttt{defensePlace}      & 答辩地点 \\
+% \bottomrule
+% \end{longtable}
+%
+% \texttt{degree} 声明学位层次；\texttt{committeeChair} 与
+% \texttt{committeeMembers} 分别填写答辩委员会的主席与委员名单；
+% \texttt{defenseDate} 与 \texttt{defensePlace} 记录答辩的时间与地点。
+% 这些信息会显示在答辩委员会页上。
+%
+% \subsection{Getter 命令}
+%
+% 为了方便在正文中引用配置信息（如摘要、声明页等），模板为每个信息键
+% 提供对应的 Getter 命令。Getter 命令可直接在文档任意位置使用，
+% 展开后返回对应的键值。例如 \cs{GetTitle} 返回论文题目。
+% 下表列出基本信息键对应的 Getter：
+%
+% \begin{longtable}{ll}
+% \toprule
+% \textbf{命令} & \textbf{对应的键} \\
+% \midrule
+% \endhead
+% \cs{GetTitle}      & \texttt{title} \\
+% \cs{GetAuthor}     & \texttt{author} \\
+% \cs{GetStudentId}  & \texttt{studentId} \\
+% \cs{GetSchool}     & \texttt{school} \\
+% \cs{GetMajor}      & \texttt{major} \\
+% \cs{GetSupervisor}  & \texttt{supervisor} \\
+% \cs{GetYear}       & \texttt{year} \\
+% \cs{GetMonth}      & \texttt{month} \\
+% \bottomrule
+% \end{longtable}
+%
+% \section{Hook 系统}
+%
+% Hook（钩子）是模板实现模块扩展的核心机制。内核在文档的六个关键阶段
+% 各预设一个钩子，模块通过 \cs{AddToHook} 把自己的行为"钩"到对应时机。
+% 这样，内核本身保持精简稳定，而各模块可在不修改内核代码的前提下，
+% 在合适的时机注入封面、声明页、摘要等自定义内容。
+%
+% \subsection{Hook 列表}
+%
+% 下表列出内核提供的六个文档阶段钩子及其触发时机：
+%
+% \begin{longtable}{ll}
+% \toprule
+% \textbf{Hook 名称} & \textbf{触发时机} \\
+% \midrule
+% \endhead
+% \texttt{sduthesis/after-setup}       & SDUSetup 完成后 \\
+% \texttt{sduthesis/before-cover}      & 封面前 \\
+% \texttt{sduthesis/cover-style}       & 封面样式 \\
+% \texttt{sduthesis/frontmatter/begin} & 前言开始 \\
+% \texttt{sduthesis/mainmatter/begin}  & 正文开始 \\
+% \texttt{sduthesis/backmatter/begin}  & 后记开始 \\
+% \bottomrule
+% \end{longtable}
+%
+% \subsection{触发时机示例}
+%
+% 下面以盲审模块为例说明 Hook 的典型用法。盲审模块在加载时（\cs{RequirePackage}
+% 阶段）通过 \cs{AddToHook} 把行为挂到相应的钩子上：
+%
+% \begin{lstlisting}[language={[LaTeX]TeX}]
+% \AddToHook{sduthesis/after-setup}{% 配置完成后执行初始化
+%   \bool_set_true:N \l__sdu_blindreview_bool
+% }
+% \AddToHook{sduthesis/before-cover}{% 封面前置处理
 %   ...
 % }
 % \end{lstlisting}
 %
-% \subsection{内置 Hook}
-%
-% 内核提供 6 个命名 Hook 供扩展：\texttt{after-setup}、
-% \texttt{before-cover}、\texttt{cover-style}、\texttt{frontmatter/begin}、
-% \texttt{mainmatter/begin}、\texttt{backmatter/begin}。
-%
-% \section{命令与环境参考}
-%
-% \subsection{核心命令}
-%
-% \begin{tabular}{ll}
-%   \toprule
-%   命令 & 说明 \\
-%   \midrule
-%   \texttt{\textbackslash MakeCover}        & 生成封面（旧式 \texttt{\textbackslash makecover} 已弃用） \\
-%   \texttt{\textbackslash MakeDeclaration} & 生成声明页（旧式 \texttt{\textbackslash makedeclaration} 已弃用） \\
-%   \texttt{\textbackslash ListOfFigures}    & 生成图表目录（图） \\
-%   \texttt{\textbackslash ListOfTables}     & 生成图表目录（表） \\
-%   \texttt{\textbackslash MakeAppendix}     & 进入附录环境 \\
-%   \bottomrule
-% \end{tabular}
-%
-% \subsection{摘要与环境}
-%
-% \begin{tabular}{ll}
-%   \toprule
-%   环境 / 命令 & 说明 \\
-%   \midrule
-%   \texttt{cnabstract}      & 中文摘要（支持可选参数自定义标题） \\
-%   \texttt{enabstract}      & 英文摘要 \\
-%   \texttt{acknowledgement} & 致谢环境 \\
-%   \bottomrule
-% \end{tabular}
-%
-% \subsection{定理环境}
-%
-% 内置丰富的定理环境：\texttt{definition}（定义）、\texttt{theorem}（定理）、
-% \texttt{lemma}（引理）、\texttt{corollary}（推论）、\texttt{proposition}
-% （命题）、\texttt{proof}（证明）、\texttt{assumption}（假设）、
-% \texttt{conjecture}（猜想）、\texttt{remark}（注）、\texttt{example}（例）。
-% 所有定理环境均带章节编号。
-%
-% \subsection{Getter 命令}
-%
-% 提供便捷的取值命令：\texttt{\textbackslash GetLang}、
-% \texttt{\textbackslash GetMathStyle}、\texttt{\textbackslash GetPreset}、
-% \texttt{\textbackslash GetDegreeName}、\texttt{\textbackslash GetDegreeNameEn}、
-% \texttt{\textbackslash GetSupervisorEn}、\texttt{\textbackslash GetCoSupervisorEn}。
-%
-% \section{旧式命令兼容}
-%
-% 为向后兼容，以下旧式命令仍可使用，但推荐统一使用
-% \texttt{\textbackslash SDUSetup} 现代化接口。
-%
-% \begin{tabular}{lll}
-%   \toprule
-%   旧式命令 & 等价新写法 & 说明 \\
-%   \midrule
-%   \texttt{\textbackslash title\{...\}}       & \texttt{\textbackslash SDUSetup\{title=\{...\}\}} & 中文标题 \\
-%   \texttt{\textbackslash title*\{...\}}      & \texttt{\textbackslash SDUSetup\{title*=\{...\}\}} & 英文标题 \\
-%   \texttt{\textbackslash author\{...\}}      & \texttt{\textbackslash SDUSetup\{author=\{...\}\}} & 作者 \\
-%   \texttt{\textbackslash degree\{...\}}      & 文档类选项 degree= & 学位类型 \\
-%   \texttt{\textbackslash school\{...\}}      & \texttt{\textbackslash SDUSetup\{school=\{...\}\}} & 学院 \\
-%   \texttt{\textbackslash major\{...\}}       & \texttt{\textbackslash SDUSetup\{major=\{...\}\}} & 专业 \\
-%   \texttt{\textbackslash supervisor\{...\}}  & \texttt{\textbackslash SDUSetup\{supervisor=\{...\}\}} & 导师 \\
-%   \texttt{\textbackslash date\{...\}}        & \texttt{\textbackslash SDUSetup\{date=\{...\}\}} & 日期 \\
-%   \texttt{\textbackslash studentid\{...\}}   & \texttt{\textbackslash SDUSetup\{student-id=\{...\}\}} & 学号 \\
-%   \bottomrule
-% \end{tabular}
-%
-% \begin{quote}
-% \textbf{注意：} 旧式命令（除 \texttt{\textbackslash makecover} /
-% \texttt{\textbackslash makedeclaration} 外）已标记为弃用，新文档请统一使用
-% \texttt{\textbackslash SDUSetup} + \texttt{\textbackslash MakeCover} /
-% \texttt{\textbackslash MakeDeclaration} 现代化接口。
-% \end{quote}
-%
-% \section{目录结构}
-%
-% \begin{lstlisting}
-% sdutex/
-% ├── src/                    # 源代码
-% │   ├── sduthesis.dtx       # 论文文档类（DTX 格式）
-% │   ├── sduthesis.ins       # 安装脚本
-% │   ├── sdutex.sty          # 工具宏包
-% │   └── sduthesis.bst       # 参考文献样式
-% ├── modules/                # 学位类型与盲审模块
-% ├── test/                   # 测试用例
-% ├── doc/                    # 开发者文档
-% ├── Makefile
-% ├── build.lua              # l3build 配置
-% └── README.md
-% \end{lstlisting}
-%
-% \section{常见问题（FAQ）}
-%
-% \paragraph{Q：解包失败怎么办？}
-% 请确保已安装 \texttt{l3build}，可通过 \texttt{tlmgr install l3build} 安装。
-%
-% \paragraph{Q：编译报错 "File not found"？}
-% 请重新执行 \texttt{l3build install} 安装相关文件。
-%
-% \paragraph{Q：测试不通过？}
-% 请检查 TeX Live 版本，推荐使用 TeX Live 2024。可运行
-% \texttt{texlua -v} 查看版本。
-%
-% \paragraph{Q：字体在部分平台无法渲染？}
-% 字体配置已做平台回退：Windows 使用系统字体，Linux/macOS 回退到
-% TeX Gyre，以保证 CI 可编译。
-%
-% \section{参考资料与致谢}
-%
-% \subsection{文档}
+% 各钩子的实际触发点说明如下：
 %
 % \begin{itemize}
-%   \item 开发者指南：\texttt{doc/DEVELOP.md}
-%   \item 架构设计：\texttt{doc/ARCHITECTURE.md}
-%   \item 内部实现：\texttt{doc/INTERNALS.md}
-%   \item 项目概述：\texttt{doc/README.md}
+%   \item \texttt{sduthesis/after-setup}：在 \cs{SDUSetup} 全部键值处理完成后
+%         触发，适合做依赖配置值的初始化，如根据 \texttt{module} 判定启用
+%         盲审标志。
+%   \item \texttt{sduthesis/before-cover}：在封面排版之前触发，可在此隐藏
+%         作者、学号等个人信息（盲审场景）。
+%   \item \texttt{sduthesis/cover-style}：封面样式钩子，用于注入封面版式。
+%   \item \texttt{sduthesis/frontmatter/begin}：前言（目录、摘要等）开始时触发。
+%   \item \texttt{sduthesis/mainmatter/begin}：正文开始时触发，常用于设置正文字体、
+%         行距等。
+%   \item \texttt{sduthesis/backmatter/begin}：后记（致谢、参考文献等）开始时触发。
 % \end{itemize}
 %
-% \subsection{相关项目}
+% \section{模块系统}
 %
-% \begin{tabular}{ll}
-%   \toprule
-%   项目 & 说明 \\
-%   \midrule
-%   \texttt{sduthesis} & 示例模板仓库 \\
-%   \texttt{sdubeamer} & Beamer 幻灯片模板 \\
-%   \bottomrule
-% \end{tabular}
+% 模块系统是模板插件化架构的载体。除了内核自带的基础能力，不同论文类型
+% （本科、硕士、盲审等）的差异化排版由各自的模块实现。每个模块都是一个
+% 独立文件，可在 \texttt{module} 键中按需加载，互不影响。
 %
-% \subsection{致谢}
+% \subsection{可用模块}
 %
-% 本项目参考了 SJTUThesis、THUThesis、zjuthesis 等优秀的 \LaTeX{}
-% 模板。本项目采用 \LaTeX{} Project Public License (LPPL) 许可证。
+% 模板目前提供以下三个模块：
 %
-% ===================================================================
-%  Class 源码文档（由 docstrip 解包生成 sduthesis.cls）
-% ===================================================================
+% \begin{longtable}{lll}
+% \toprule
+% \textbf{模块名} & \textbf{文件} & \textbf{说明} \\
+% \midrule
+% \endhead
+% \texttt{undergraduate} & \texttt{sduthesis-undergraduate.sty} & 本科论文 \\
+% \texttt{master}        & \texttt{sduthesis-master.sty}        & 硕士学位论文 \\
+% \texttt{blindreview}   & \texttt{sduthesis-blindreview.sty}   & 盲审模式（叠加层，需与基础模块组合） \\
+% \bottomrule
+% \end{longtable}
 %
-%% \iffalse
-%%
-%% ===================================================================
-%% SDUTeX - 山东大学 LaTeX 论文模板核心包
-%% https://github.com/h1s97x/sdutex
-%% ===================================================================
-%%
-%% Copyright (C) 2024 SDU LaTeX Contributors
-%%
-%% This work may be distributed and/or modified under the conditions
-%% of the LaTeX Project Public License, either version 1.3 of this
-%% license or (at your option) any later version.
-%% The latest version of this license is in
-%%   https://www.latex-project.org/lppl.txt
-%% and version 1.3c or later is part of all distributions of LaTeX
-%% version 2008-05-04 or later.
-%%
-%% This work has the LPPL maintenance status "maintained".
-%%
-%% The Current Maintainer of this work is SDU LaTeX Contributors.
-%%
-%% This work consists of the files listed in the companion file
-%% sduthesis.dtx and the other files listed in the header of that file.
-%%
-%% The source files of this work are located at:
-%%   https://github.com/h1s97x/sdutex
-%%
-%% \fi
-%%
-%% ===================================================================
-%% Class Structure
-%% ===================================================================
-%%
-%% This document class implements the *kernel* of the SDUTeX plugin
-%% architecture:
-%%
-%%   1. Engine + base class loading + basic layout
-%%   2. The SDUTeX Hook system (6 named hooks)
-%%   3. Module loader (``module = {...}'') triggered at begindocument
-%%
-%% All degree-specific logic (cover pages, blind-review hiding, etc.)
-%% has been moved out into the companion ``modules/*.sty'' files so that
-%% the kernel stays degree-agnostic and acts as the single source of
-%% truth.
-%%
-%% \subsection{Class Identity}
-%%
-%% \changes{v1.1.0}{2026/08/18}{Kernel + modules + hooks architecture}
-
-%% Class header: \NeedsTeXFormat{} and \ProvidesClass{}
-%%    \begin{macrocode}
-%<!CLASS>
-\NeedsTeXFormat{LaTeX2e}[1995/12/01]
-\ProvidesClass{sduthesis}[2026/08/18 1.1.0 Shandong University Thesis Template]
+% \subsection{多模块组合}
+%
+% \texttt{module} 键支持逗号分隔的模块列表，按顺序依次加载，
+% 实现功能叠加。例如硕博论文 + 盲审：
+%
+% \begin{lstlisting}[language={[LaTeX]TeX}]
+% \SDUSetup{
+%   module = {master, blindreview},
+%   degree = {硕士},
+%   ...
+% }
+% \end{lstlisting}
+%
+% 盲审模块（\texttt{blindreview}）是叠加层：它本身不定义封面版式，
+% 而是通过盲审标志让基础模块（\texttt{undergraduate}/\texttt{master}）
+% 在封面中隐藏作者、学号、导师等个人信息。
+%
+% \textbf{盲审回退}：若列表中包含 \texttt{blindreview} 但未指定任何基础
+% 模块（\texttt{undergraduate}/\texttt{master}），内核会自动前置加载本科模块。
+% 回退在加载器内完成、与书写顺序无关——例如
+% \texttt{module = {blindreview, master}} 不会重复加载两个基础模块，
+% 只有 \texttt{master} 会被加载。
+%
+% \textbf{盲审范围}：盲审模式下除封面个人信息行（姓名/学号/指导教师）隐藏外，
+% 答辩委员会页（主席/委员姓名）也会整页跳过，避免在盲审稿中泄露委员会成员信息。
+%
+% \subsection{创建新模块}
+%
+% 模板的模块机制对扩展者友好。要创建一个新模块，只需在 \texttt{modules/}
+% 目录下新建一个 \texttt{.sty} 文件，文件名遵循
+% \texttt{sduthesis-<模块名>.sty} 的格式，之后即可在 \texttt{module} 键中
+% 通过模块名引用。模块内部可以使用 \LaTeX3 的全部能力，主要包括以下三种方式：
+%
+% \begin{itemize}
+%   \item 通过 \cs{renewcommand} 覆盖占位命令
+%   \item 通过 \cs{AddToHook} 在文档阶段注入行为
+%   \item 通过 \cs{keys_define:nn} 注册新的配置键
+% \end{itemize}
+%
+% 其中，占位命令覆盖用于替换内核提供的默认空实现（如 \cs{makecoverpage}），
+% Hook 注入用于在合适的时机排版页面，而 \cs{keys_define:nn} 允许模块扩展
+% 自己的配置键，并通过 \cs{SDUSetup} 统一传入。
+%
+% \section*{附录 代码实现}
+%
+% 以下为模板的完整源码实现，供开发者阅读；普通用户只需关注上文正文内容。
+% 附录按功能模块组织，每部分开头有一段说明，随后是紧凑的宏代码；
+% 内容从文档类声明、变量存储、键注册到各排版引擎逐步展开。
+%
+% \subsection{文档类声明与加载}
+%
+% 基于 ctexbook，使用 openany 避免章节强制奇数页。
+%
+%    \begin{macrocode}
+%<*cls>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesClass{sduthesis}[2026/08/18 v2.2.0 Thesis template for Shandong University]
+\LoadClass[openany]{ctexbook}
 %    \end{macrocode}
-%%
-%% ===================================================================
-%% Class Structure
-%% ===================================================================
-%%
-%% This document class implements the *kernel* of the SDUTeX plugin
-%% architecture:
-%%
-%%   1. Engine + base class loading + basic layout
-%%   2. The SDUTeX Hook system (6 named hooks)
-%%   3. Module loader (``module = {...}'') triggered at begindocument
-%%
-%% All degree-specific logic (cover pages, blind-review hiding, etc.)
-%% has been moved out into the companion ``modules/*.sty'' files so that
-%% the kernel stays degree-agnostic and acts as the single source of
-%% truth.
-%%
-%% \subsection{Class Identity}
-%%
-%% \changes{v1.1.0}{2026/08/18}{Kernel + modules + hooks architecture}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
-%    \end{macrocode}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
+%
+% \subsection{LaTeX3 引擎}
+%
+% 加载 expl3 和 l3keys2e，启用 LaTeX3 编程接口。
+%
+%    \begin{macrocode}
 \RequirePackage{expl3}
 \RequirePackage{l3keys2e}
+
 \ExplSyntaxOn
 %    \end{macrocode}
-%%
-%% Define the internal prefix.
-%%    \begin{macrocode}
-%<!CLASS>
-%<@@=sdu>
+%
+% \subsection{存储层：变量声明}
+%
+% 所有配置值通过 \texttt{tl}（token list）变量存储。
+% 命名规范为 \texttt{\textbackslash l\_\_sdu\_<名称>\_tl}：\texttt{l} 表示局部变量，
+% \texttt{\_\_sdu} 是模块前缀。声明按四组排列——论文信息、学位信息
+% （master/doctor 模块使用）、样式、模块——同一组内紧挨排列、零注释零空行。
+%
+%    \begin{macrocode}
+\tl_new:N \l__sdu_title_tl
+\tl_new:N \l__sdu_author_tl
+\tl_new:N \l__sdu_studentid_tl
+\tl_new:N \l__sdu_school_tl
+\tl_new:N \l__sdu_major_tl
+\tl_new:N \l__sdu_supervisor_tl
+\tl_new:N \l__sdu_year_tl
+\tl_new:N \l__sdu_month_tl
+\tl_new:N \l__sdu_degree_tl
+\tl_new:N \l__sdu_committee_chair_tl
+\tl_new:N \l__sdu_committee_members_tl
+\tl_new:N \l__sdu_defense_date_tl
+\tl_new:N \l__sdu_defense_place_tl
+\dim_new:N \l__sdu_line_spread_dim
+\tl_new:N \l__sdu_page_left_tl
+\tl_new:N \l__sdu_page_right_tl
+\tl_new:N \l__sdu_page_top_tl
+\tl_new:N \l__sdu_page_bottom_tl
+\tl_new:N \l__sdu_module_tl
+\seq_new:N \l__sdu_module_seq
+\tl_new:N \l__sdu_module_tmp_tl
+\tl_new:N \l__sdu_module_item_tl
+\tl_new:N \l__sdu_module_pkg_tl
+\bool_new:N \l__sdu_blindreview_bool
+\bool_new:N \l__sdu_has_blindreview_bool
+\bool_new:N \l__sdu_has_base_module_bool
 %    \end{macrocode}
-%%
-%% ===================================================================
-%% Global Variables
-%% ===================================================================
-%%
-%% \subsection{Global Variables}
-%%
-%% Degree type (used only as a convenience shortcut that maps onto the
-%% module loader):
-%% \begin{itemize}
-%%   \item 1 = bachelor (本科生)
-%%   \item 2 = master (学术型硕士)
-%%   \item 3 = master-professional (专业型硕士)
-%%   \item 4 = doctor (博士)
-%% \end{itemize}
-%%    \begin{macrocode}
-%<!CLASS>
-\int_new:N \g_@@_type_int
-\int_new:N \g_@@_type_major_int
-\int_new:N \g_@@_type_professional_int
-%    \end{macrocode}
-%%
-%% \begin{variable}{\g_@@_blind_bool}
-%% 是否为盲审模式
-%%    \begin{macrocode}
-%<!CLASS>
-\bool_new:N \g_@@_blind_bool
-%    \end{macrocode}
-%% \end{variable}
-%%
-%% \begin{variable}{\g_@@_twoside_bool}
-%% 是否双面打印
-%%    \begin{macrocode}
-%<!CLASS>
-\bool_new:N \g_@@_twoside_bool
-%    \end{macrocode}
-%% \end{variable}
-%%
-%% \begin{variable}{\g_@@_professional_bool}
-%% 是否为专业学位（由 master 模块使用）
-%%    \begin{macrocode}
-%<!CLASS>
-\bool_new:N \g_@@_professional_bool
-%    \end{macrocode}
-%% \end{variable}
-%%
-%% \begin{variable}{\g_@@_module_clist}
-%% 需要加载的模块列表（如 master, blindreview）
-%%    \begin{macrocode}
-%<!CLASS>
-\clist_new:N \g_@@_module_clist
-\clist_new:N \g_@@_module_pending_clist
-%    \end{macrocode}
-%% \end{variable}
-%%
-%% User configuration variables.
-%%    \begin{macrocode}
-%<!CLASS>
-\tl_new:N \g_@@_title_tl
-\tl_new:N \g_@@_title_en_tl
-\tl_new:N \g_@@_author_tl
-\tl_new:N \g_@@_author_en_tl
-\tl_new:N \g_@@_student_id_tl
-\tl_new:N \g_@@_school_tl
-\tl_new:N \g_@@_major_tl
-\tl_new:N \g_@@_major_en_tl
-\tl_new:N \g_@@_supervisor_tl
-\tl_new:N \g_@@_supervisor_title_tl
-\tl_new:N \g_@@_co_supervisor_tl
-\tl_new:N \g_@@_supervisor_en_tl
-\tl_new:N \g_@@_co_supervisor_en_tl
-\tl_new:N \g_@@_date_tl
-\tl_new:N \g_@@_cn_keywords_tl
-\tl_new:N \g_@@_en_keywords_tl
-\tl_new:N \g_@@_abstract_tl
-\tl_new:N \g_@@_abstract_en_tl
-\tl_new:N \g_@@_degree_name_tl
-\tl_new:N \g_@@_degree_name_en_tl
-% 扩展选项变量
-\tl_new:N \g_@@_lang_tl
-\tl_new:N \g_@@_math_style_tl
-\tl_new:N \g_@@_preset_tl
-\bool_new:N \g_@@_has_listoffigures_bool
-\bool_new:N \g_@@_has_listoftables_bool
-\tl_new:N \g_@@_header_left_tl
-\tl_new:N \g_@@_header_right_tl
-%    \end{macrocode}
-%%
-%% Layout variables.
-%%    \begin{macrocode}
-%<!CLASS>
-\dim_new:N \g_@@_cover_label_width_dim
-\dim_new:N \g_@@_cover_value_width_dim
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Auxiliary Functions
-%% ===================================================================
-%%
-%% \subsection{Auxiliary Functions}
-%%
-%% The kernel keeps only the degree-agnostic helpers.  Degree-specific
-%% predicates (bachelor / master / doctor / professional) are provided
-%% by the degree modules so that the kernel itself stays neutral.
-%%
-%% \begin{function}{\@@_if_blind:TF}
-%% 判断是否为盲审模式
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_if_blind:TF #1#2 {
-  \bool_if:NTF \g_@@_blind_bool {#1} {#2}
+%
+% \subsection{定义层：键注册}
+%
+% 使用 l3keys 注册所有配置键，按组分包为 \texttt{info} 与 \texttt{option}
+% 两个嵌套子组，配合顶层的 \texttt{module} 键。
+%
+% 子组 \texttt{sdu/info} 收纳论文元数据：信息组 + 学位信息组
+% （master/doctor 模块使用）；子组 \texttt{sdu/option} 收纳排版参数。
+% 键值统一通过 \cs{SDUSetup} 传入，既支持 \verb|info={...}| 的嵌套分组写法，
+% 也保留平铺写法的向后兼容（旧写法的键仍可直接写在顶层）。
+%
+%    \begin{macrocode}
+\keys_define:nn { sdu / info }
+{
+  title          .tl_set:N = \l__sdu_title_tl,
+  author         .tl_set:N = \l__sdu_author_tl,
+  studentId      .tl_set:N = \l__sdu_studentid_tl,
+  school         .tl_set:N = \l__sdu_school_tl,
+  major          .tl_set:N = \l__sdu_major_tl,
+  supervisor     .tl_set:N = \l__sdu_supervisor_tl,
+  year           .tl_set:N = \l__sdu_year_tl,
+  month          .tl_set:N = \l__sdu_month_tl,
+  degree         .tl_set:N = \l__sdu_degree_tl,
+  degree         .initial:n = { 硕士 },
+  committeeChair .tl_set:N = \l__sdu_committee_chair_tl,
+  committeeMembers .tl_set:N = \l__sdu_committee_members_tl,
+  defenseDate    .tl_set:N = \l__sdu_defense_date_tl,
+  defensePlace   .tl_set:N = \l__sdu_defense_place_tl,
+}
+
+\keys_define:nn { sdu / option }
+{
+  lineSpread  .tl_set:N = \l__sdu_line_spread_dim,
+  lineSpread  .initial:n = { 1.5 },
+  pageLeft    .tl_set:N = \l__sdu_page_left_tl,
+  pageLeft    .initial:n = { 3cm },
+  pageRight   .tl_set:N = \l__sdu_page_right_tl,
+  pageRight   .initial:n = { 3cm },
+  pageTop     .tl_set:N = \l__sdu_page_top_tl,
+  pageTop     .initial:n = { 2.5cm },
+  pageBottom  .tl_set:N = \l__sdu_page_bottom_tl,
+  pageBottom  .initial:n = { 2.5cm },
+}
+
+\keys_define:nn { sdu }
+{
+  % 顶层：模块键 + info/option 嵌套代理键
+  module   .tl_set:N = \l__sdu_module_tl,
+  module   .initial:n = { undergraduate },
+  info     .code:n = { \keys_set:nn { sdu / info } { #1 } },
+  option   .code:n = { \keys_set:nn { sdu / option } { #1 } },
+
+  % 平铺兼容别名：保持旧写法的键仍可在顶层直接使用
+  title          .tl_set:N = \l__sdu_title_tl,
+  author         .tl_set:N = \l__sdu_author_tl,
+  studentId      .tl_set:N = \l__sdu_studentid_tl,
+  school         .tl_set:N = \l__sdu_school_tl,
+  major          .tl_set:N = \l__sdu_major_tl,
+  supervisor     .tl_set:N = \l__sdu_supervisor_tl,
+  year           .tl_set:N = \l__sdu_year_tl,
+  month          .tl_set:N = \l__sdu_month_tl,
+  degree         .tl_set:N = \l__sdu_degree_tl,
+  committeeChair .tl_set:N = \l__sdu_committee_chair_tl,
+  committeeMembers .tl_set:N = \l__sdu_committee_members_tl,
+  defenseDate    .tl_set:N = \l__sdu_defense_date_tl,
+  defensePlace   .tl_set:N = \l__sdu_defense_place_tl,
+  lineSpread     .tl_set:N = \l__sdu_line_spread_dim,
+  pageLeft       .tl_set:N = \l__sdu_page_left_tl,
+  pageRight      .tl_set:N = \l__sdu_page_right_tl,
+  pageTop        .tl_set:N = \l__sdu_page_top_tl,
+  pageBottom     .tl_set:N = \l__sdu_page_bottom_tl,
 }
 %    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_secret_info:n}
-%% 隐藏敏感信息（用于盲审），由 blindreview 模块的钩子改写。
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_secret_circle:n #1 {
-  \leavevmode \prg_replicate:nn { #1 } {
-    \raisebox{0.2ex}{\rule{0.9em}{0.9em}}\kern 0.1em
+%
+% \subsection{命令层：SDUSetup}
+%
+% 用户配置命令。内部调用 \texttt{\textbackslash keys\_set:nn} 设置键值。
+%
+%    \begin{macrocode}
+\NewDocumentCommand \SDUSetup { m }
+{
+  \keys_set:nn { sdu } { #1 }
+}
+%    \end{macrocode}
+%
+% \subsection{导出层：Getter 命令}
+%
+% 每个 Getter 命令读取对应的 token list 变量并展开。
+%
+% 基本信息 Getter：
+%
+%    \begin{macrocode}
+\NewDocumentCommand \GetTitle { } { \l__sdu_title_tl }
+\NewDocumentCommand \GetAuthor { } { \l__sdu_author_tl }
+\NewDocumentCommand \GetStudentId { } { \l__sdu_studentid_tl }
+\NewDocumentCommand \GetSchool { } { \l__sdu_school_tl }
+\NewDocumentCommand \GetMajor { } { \l__sdu_major_tl }
+\NewDocumentCommand \GetSupervisor { } { \l__sdu_supervisor_tl }
+\NewDocumentCommand \GetYear { } { \l__sdu_year_tl }
+\NewDocumentCommand \GetMonth { } { \l__sdu_month_tl }
+%    \end{macrocode}
+%
+% 学位信息 Getter（master/doctor 模块使用）：
+%
+%    \begin{macrocode}
+\NewDocumentCommand \GetDegree { } { \l__sdu_degree_tl }
+\NewDocumentCommand \GetCommitteeChair { } { \l__sdu_committee_chair_tl }
+\NewDocumentCommand \GetCommitteeMembers { } { \l__sdu_committee_members_tl }
+\NewDocumentCommand \GetDefenseDate { } { \l__sdu_defense_date_tl }
+\NewDocumentCommand \GetDefensePlace { } { \l__sdu_defense_place_tl }
+%    \end{macrocode}
+%
+% \subsection{模块加载器}
+%
+% 将 \texttt{modules/} 目录添加到 \texttt{\textbackslash input@path}，
+% 使 \cs{RequirePackage} 能搜索到模块文件。
+% 这一步必须在 \texttt{\textbackslash ExplSyntaxOn} 之外执行，
+% 因为需要使用 \texttt{\textbackslash makeatletter}。
+%
+%    \begin{macrocode}
+\ExplSyntaxOff
+\makeatletter
+\IfFileExists{modules/sduthesis-undergraduate.sty}{%
+  \ifx\input@path\@undefined
+    \def\input@path{{modules/}}%
+  \else
+    \g@addto@macro\input@path{{modules/}}%
+  \fi
+  \typeout{sduthesis: added modules/ to search path}%
+}{}
+\makeatother
+\ExplSyntaxOn
+%    \end{macrocode}
+%
+% 模块未找到时的错误信息：
+%
+%    \begin{macrocode}
+\msg_new:nnn { sdu } { module-not-found }
+{
+  Module~'#1'~not~found.~Please~check~the~module~name~in~\SDUSetup.
+}
+%    \end{macrocode}
+%
+% 构建模块包名并加载。
+% 支持逗号分隔的多模块列表（如 \texttt{module = {master, blindreview}}），
+% 按顺序依次加载，实现功能叠加（如硕博论文 + 盲审）。
+% 空白分隔符会被去掉，空项自动跳过。
+%
+% 盲审回退在\textbf{内核}完成而非盲审模块内部：
+% 若列表中包含 \texttt{blindreview} 但缺少基础模块
+% （\texttt{undergraduate}/\texttt{master}），
+% 自动\textbf{前置}加载本科模块。
+% 这样 \texttt{module = {blindreview, master}} 等任意书写顺序
+% 都不会出现"同时加载两个基础模块"的冲突。
+%    \begin{macrocode}
+\cs_new:Nn \sdu_load_module:
+{
+  \tl_set:Nx \l__sdu_module_tmp_tl { \l__sdu_module_tl }
+  \seq_set_split:NnV \l__sdu_module_seq { , } \l__sdu_module_tmp_tl
+  % 先扫描：判断是否含 blindreview、是否已有基础模块
+  \bool_set_false:N \l__sdu_has_blindreview_bool
+  \bool_set_false:N \l__sdu_has_base_module_bool
+  \seq_map_inline:Nn \l__sdu_module_seq
+  {
+    \tl_set:Nx \l__sdu_module_item_tl { \tl_trim_spaces:n { ##1 } }
+    \tl_if_eq:NnT \l__sdu_module_item_tl { blindreview }
+      { \bool_set_true:N \l__sdu_has_blindreview_bool }
+    \tl_if_eq:NnT \l__sdu_module_item_tl { undergraduate }
+      { \bool_set_true:N \l__sdu_has_base_module_bool }
+    \tl_if_eq:NnT \l__sdu_module_item_tl { master }
+      { \bool_set_true:N \l__sdu_has_base_module_bool }
   }
-}
-\cs_new:Npn \@@_secret_info:n #1 {
-  \@@_if_blind:TF {
-    \@@_secret_circle:n { 1 }
-  } {
-    #1
+  % 单独使用 blindreview 时前置加载本科模块（与书写顺序无关）
+  \bool_if:NT \l__sdu_has_blindreview_bool
+  {
+    \bool_if:NF \l__sdu_has_base_module_bool
+    {
+      \RequirePackage{sduthesis-undergraduate}
+    }
   }
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_secret_info_fixed:Nn}
-%% 固定长度隐藏（用于学号等）
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_secret_info_fixed:Nn #1#2 {
-  \tl_if_blank:VTF #1 { } {
-    \@@_if_blind:TF {
-      \@@_secret_circle:n {#2}
-    } {
-      #1
+  % 按用户指定顺序正式加载
+  \seq_map_inline:Nn \l__sdu_module_seq
+  {
+    \tl_set:Nx \l__sdu_module_item_tl { \tl_trim_spaces:n { ##1 } }
+    \tl_if_empty:NF \l__sdu_module_item_tl
+    {
+      \tl_set:Nx \l__sdu_module_pkg_tl { sduthesis-\l__sdu_module_item_tl }
+      \exp_args:NV \RequirePackage \l__sdu_module_pkg_tl
     }
   }
 }
 %    \end{macrocode}
-%% \end{function}
-%%
-%% ===================================================================
-%% Cover Helper
-%% ===================================================================
-%%
-%% \subsection{Cover Helper}
-%%
-%% A shared, degree-agnostic cover table entry used by the degree
-%% modules.  This is basic layout infrastructure and therefore stays in
-%% the kernel.
-%%    \begin{macrocode}
-%<!CLASS>
-\dim_gset:Nn \g_@@_cover_label_width_dim { 2.3cm }
-\dim_gset:Nn \g_@@_cover_value_width_dim { 5.5cm }
+%
+% \subsection{Hook 系统}
+%
+% 六个文档阶段钩子。模块通过 \cs{AddToHook} 注入行为。
+%
+%    \begin{macrocode}
+\NewHook { sduthesis/after-setup }
+\NewHook { sduthesis/before-cover }
+\NewHook { sduthesis/cover-style }
+\NewHook { sduthesis/frontmatter/begin }
+\NewHook { sduthesis/mainmatter/begin }
+\NewHook { sduthesis/backmatter/begin }
 %    \end{macrocode}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \@@_cover_entry:nn #1#2 {
-  \begin{tabular}{>{\centering\arraybackslash}p{\g_@@_cover_label_width_dim}>{\centering\arraybackslash}p{\g_@@_cover_value_width_dim}}
-    \zihao{3} \bfseries \kaishu {#1} &
-    \zihao{3} \kaishu {#2}
-    \\ \cline{2-2}
-  \end{tabular}
-  \vspace{-5mm}
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Hook System
-%% ===================================================================
-%%
-%% \subsection{Hook System}
-%%
-%% SDUTeX 插件化架构的核心：定义 6 个命名钩子，供模块与用户扩展。
-%% 钩子基于 LaTeX3 内核的 hook 机制实现，支持按标签追加代码。
-%%
-%% \begin{function}{sduthesis/after-setup}
-%% 在 \cs{SDUSetup} 处理完配置后触发。
-%%    \begin{macrocode}
-%<!CLASS>
-\hook_new:n { sduthesis/after-setup }
-\hook_new:n { sduthesis/before-cover }
-\hook_new:n { sduthesis/cover-style }
-\hook_new:n { sduthesis/frontmatter/begin }
-\hook_new:n { sduthesis/mainmatter/begin }
-\hook_new:n { sduthesis/backmatter/begin }
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\sdu_hook_use:n}
-%% 触发一个命名钩子。
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new:Npn \sdu_hook_use:n #1 {
-  \hook_use:n { #1 }
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% ===================================================================
-%% Options Parsing
-%% ===================================================================
-%%
-%% \subsection{Options Parsing}
-%%
-%% Declare class options.  The \texttt{degree} and \texttt{blind}
-%% options are kept for backward compatibility and transparently mapped
-%% onto the module loader; \texttt{module} provides the new combined
-%% loading interface.
-%%    \begin{macrocode}
-%<!CLASS>
-\keys_define:nn { sdu / option } {
-  degree .choices:nn = { bachelor, master, professional, doctor } {
-    \int_gset:Nn \g_@@_type_int {\l_keys_choice_int}
-    \bool_gset_false:N \g_@@_professional_bool
-    \str_if_eq:eeT { \l_keys_choice_tl } { professional } {
-      \bool_gset_true:N \g_@@_professional_bool
-    }
-    \clist_gput_right:Nx \g_@@_module_pending_clist { degree-\l_keys_choice_tl }
-  },
-  degree .value_required:n = true,
-  degree .initial:n = {bachelor},
-  professional .bool_set:N = \g_@@_professional_bool,
-  blind .bool_set:N = \g_@@_blind_bool,
-  blind .initial:n = {false},
-  twoside .bool_set:N = \g_@@_twoside_bool,
-  twoside .initial:n = {false},
-  module .code:n = {
-    \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
-  },
-  % 语言选项
-  lang .choices:nn = { zh, en, zh-en, en-zh } {
-    \tl_gset:Nx \g_@@_lang_tl { \l_keys_choice_tl }
-  },
-  lang .initial:n = { zh },
-  % 数学风格选项
-  math-style .choices:nn = { ISO, GB, french, upright } {
-    \tl_gset:Nx \g_@@_math_style_tl { \l_keys_choice_tl }
-  },
-  math-style .initial:n = { ISO },
-  % 预设风格选项
-  preset .choices:nn = { sdu, sjtu, none } {
-    \tl_gset:Nx \g_@@_preset_tl { \l_keys_choice_tl }
-  },
-  preset .initial:n = { sdu },
-  unknown .code:n = {
-    \PassOptionsToClass {\l_keys_key_tl} {ctexbook}
-  }
-}
-%    \end{macrocode}
-%%
-%% Process options.
-%%    \begin{macrocode}
-%<!CLASS>
-\ProcessKeysOptions { sdu / option }
-%    \end{macrocode}
-%%
-%% Legacy command to set the degree type (maps onto module loading).
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \degree { m } {
-  \keys_set:nn { sdu / option } { degree = {#1} }
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Load Base Class
-%% ===================================================================
-%%
-%% \subsection{Load Base Class}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
-\LoadClass[zihao=-4, a4paper, twoside=\g_@@_twoside_bool] {ctexbook}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Package Loading
-%% ===================================================================
-%%
-%% \subsection{Package Loading}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
-\RequirePackage { geometry }
-\RequirePackage { fancyhdr }
-\RequirePackage { graphicx }
-\RequirePackage { array }
-\RequirePackage { booktabs }
-\RequirePackage { longtable }
-\RequirePackage { enumitem }
-\RequirePackage { caption }
-\RequirePackage { hyperref }
-\RequirePackage { amsmath }
-\RequirePackage { amssymb }
-\RequirePackage { amsthm }
-\RequirePackage { bm }
-\RequirePackage { algorithmicx }
-\RequirePackage { algorithm }
-\RequirePackage { listings }
-\RequirePackage { xcolor }
-\RequirePackage { setspace }
-% 中文下划线/着重号：XeTeX 用 xeCJKfntef，LuaTeX 用 luatexja 兼容层
-\sys_if_engine_xetex:TF {
-  \RequirePackage { xeCJKfntef }
-} {
-  \RequirePackage { luatexja }
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Page Layout
-%% ===================================================================
-%%
-%% \subsection{Page Layout}
-%%
-%% Set page geometry.
-%%    \begin{macrocode}
-%<!CLASS>
-\geometry {
-  top = 3.0cm,
-  bottom = 2.5cm,
-  left = 3.0cm,
-  right = 2.5cm,
-  headheight = 1.5cm,
-  headsep = 0.5cm,
-  footskip = 1.0cm
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Style Configuration
-%% ===================================================================
-%%
-%% \subsection{Style Configuration}
-%%
-%% Set Chinese font (using system fonts).
-%%    \begin{macrocode}
-%<!CLASS>
-% Windows 环境优先使用系统字体（Times New Roman / Arial / Consolas），
-% 其他平台（Linux CI / macOS）回退到 TeX Live 自带的 TeX Gyre 字体，
-% 以保证 make test 在无 Windows 字体的环境中也能通过。
-\sys_if_platform_windows:TF {
-  \setmainfont{Times~New~Roman}[AutoFakeBold]
-  \setsansfont{Arial}
-  \setmonofont{Consolas}
-} {
-  \setmainfont{TeX~Gyre~Termes}[AutoFakeBold]
-  \setsansfont{TeX~Gyre~Heros}
-  \setmonofont{TeX~Gyre~Cursor}
-}
-%    \end{macrocode}
-%%
-%% Set bibliography style (use custom .bst).
-%%    \begin{macrocode}
-%<!CLASS>
-\bibliographystyle{sduthesis}
-%    \end{macrocode}
-%%
-%% Set algorithm style.
-%%    \begin{macrocode}
-%<!CLASS>
-\RequirePackage { algpseudocode }
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Theorem Environments
-%% ===================================================================
-%%
-%% \subsection{Theorem Environments}
-%%
-%% Define standard theorem-like environments.
-%%    \begin{macrocode}
-%<!CLASS>
-\newtheorem{definition}{定义}
-\newtheorem{theorem}{定理}
-\newtheorem{lemma}{引理}
-\newtheorem{corollary}{推论}
-\newtheorem{proposition}{命题}
-% 使用 amsthm 内置的 proof 环境
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% User Setup Interface
-%% ===================================================================
-%%
-%% \subsection{User Setup Interface}
-%%
-%% Define setup keys.  \texttt{module} 用于在文档内组合加载模块，
-%% 如 \verb|\SDUSetup{ module = {master, blindreview} }|。
-%%    \begin{macrocode}
-%<!CLASS>
-\keys_define:nn { sdu / setup } {
-  title .tl_gset:N = \g_@@_title_tl,
-  title* .tl_gset:N = \g_@@_title_en_tl,
-  author .tl_gset:N = \g_@@_author_tl,
-  author* .tl_gset:N = \g_@@_author_en_tl,
-  student-id .tl_gset:N = \g_@@_student_id_tl,
-  school .tl_gset:N = \g_@@_school_tl,
-  major .tl_gset:N = \g_@@_major_tl,
-  major* .tl_gset:N = \g_@@_major_en_tl,
-  supervisor .tl_gset:N = \g_@@_supervisor_tl,
-  supervisor-title .tl_gset:N = \g_@@_supervisor_title_tl,
-  supervisor* .tl_gset:N = \g_@@_supervisor_en_tl,
-  co-supervisor .tl_gset:N = \g_@@_co_supervisor_tl,
-  co-supervisor* .tl_gset:N = \g_@@_co_supervisor_en_tl,
-  date .tl_gset:N = \g_@@_date_tl,
-  keywords .tl_gset:N = \g_@@_cn_keywords_tl,
-  keywords* .tl_gset:N = \g_@@_en_keywords_tl,
-  % 双语分组键值（对齐 SJTUTeX）：\verb|info = { zh/title = {...}, en/title = {...} }|
-  info .code:n = {
-    \keys_set:nn { sdu / info } { #1 }
-  },
-  % 语言、数学风格、预设
-  lang .choices:nn = { zh, en, zh-en, en-zh } {
-    \tl_gset:Nx \g_@@_lang_tl { \l_keys_choice_tl }
-  },
-  math-style .choices:nn = { ISO, GB, french, upright } {
-    \tl_gset:Nx \g_@@_math_style_tl { \l_keys_choice_tl }
-  },
-  preset .choices:nn = { sdu, sjtu, none } {
-    \tl_gset:Nx \g_@@_preset_tl { \l_keys_choice_tl }
-  },
-  % 页眉样式设置
-  header-left .tl_gset:N = \g_@@_header_left_tl,
-  header-right .tl_gset:N = \g_@@_header_right_tl,
-  module .code:n = {
-    \clist_gput_right:Nn \g_@@_module_pending_clist { #1 }
-  },
-}
+%
+% 在 \texttt{\textbackslash begin\{document\}} 时加载模块，
+% 确保 SDUSetup 已被调用。
+%
+%    \begin{macrocode}
+\AddToHook { begindocument } { \sdu_load_module: \UseHook { sduthesis/after-setup } }
 
-% 双语分组：\verb|info = { zh/title = {...}, en/title = {...} }|
-\keys_define:nn { sdu / info } {
-  zh/title .tl_gset:N = \g_@@_title_tl,
-  zh/author .tl_gset:N = \g_@@_author_tl,
-  zh/student-id .tl_gset:N = \g_@@_student_id_tl,
-  zh/school .tl_gset:N = \g_@@_school_tl,
-  zh/major .tl_gset:N = \g_@@_major_tl,
-  zh/supervisor .tl_gset:N = \g_@@_supervisor_tl,
-  zh/supervisor-title .tl_gset:N = \g_@@_supervisor_title_tl,
-  zh/co-supervisor .tl_gset:N = \g_@@_co_supervisor_tl,
-  zh/date .tl_gset:N = \g_@@_date_tl,
-  zh/keywords .tl_gset:N = \g_@@_cn_keywords_tl,
-  zh/degree-name .tl_gset:N = \g_@@_degree_name_tl,
-  en/title .tl_gset:N = \g_@@_title_en_tl,
-  en/author .tl_gset:N = \g_@@_author_en_tl,
-  en/major .tl_gset:N = \g_@@_major_en_tl,
-  en/supervisor .tl_gset:N = \g_@@_supervisor_en_tl,
-  en/co-supervisor .tl_gset:N = \g_@@_co_supervisor_en_tl,
-  en/keywords .tl_gset:N = \g_@@_en_keywords_tl,
-  en/degree-name .tl_gset:N = \g_@@_degree_name_en_tl,
+% 盲审标志：由 blindreview 模块在加载时置为真。
+% 基础模块（undergraduate/master）在排版封面时通过
+% \cs{IfBlindReviewTF} 决定是否隐藏作者、学号、导师等个人信息。
+% \cs{IfBlindReviewF} 是"非盲审才输出"的简写（盲审时真分支为空），
+% 用于封面个人信息行等场景，可读性更好。
+%    \begin{macrocode}
+\cs_new:Npn \IfBlindReviewTF #1 #2
+{
+  \bool_if:NTF \l__sdu_blindreview_bool { #1 } { #2 }
 }
-%    \end{macrocode}
-%%
-%% \begin{function}{\SDUSetup}
-%% Main setup command for users.  Fires the
-%% \texttt{sduthesis/after-setup} hook once configuration is applied.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \SDUSetup { m } {
-  \keys_set:nn { sdu / setup } {#1}
-  \hook_use:n { sduthesis/after-setup }
+\cs_new:Npn \IfBlindReviewF #1
+{
+  \bool_if:NF \l__sdu_blindreview_bool { #1 }
 }
-%    \end{macrocode}
-%% \end{function}
-%%
-%% Legacy commands mapping to the modern setup keys.
-%%    \begin{macrocode}
-%<!CLASS>
-\DeclareDocumentCommand \title { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { title* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { title = {#2} }
-  }
-}
-\DeclareDocumentCommand \author { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { author* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { author = {#2} }
-  }
-}
-\DeclareDocumentCommand \school { m } { \keys_set:nn { sdu / setup } { school = {#1} } }
-\DeclareDocumentCommand \major { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { major* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { major = {#2} }
-  }
-}
-\DeclareDocumentCommand \supervisor { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { supervisor* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { supervisor = {#2} }
-  }
-}
-\DeclareDocumentCommand \cosupervisor { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { co-supervisor* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { co-supervisor = {#2} }
-  }
-}
-\DeclareDocumentCommand \date { m } { \keys_set:nn { sdu / setup } { date = {#1} } }
-\DeclareDocumentCommand \studentid { m } { \keys_set:nn { sdu / setup } { student-id = {#1} } }
-\DeclareDocumentCommand \keywords { s m } {
-  \IfBooleanTF {#1} {
-    \keys_set:nn { sdu / setup } { keywords* = {#2} }
-  } {
-    \keys_set:nn { sdu / setup } { keywords = {#2} }
-  }
-}
-%    \end{macrocode}
-%%
-%% Getter commands.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \GetTitle { } { \tl_use:N \g_@@_title_tl }
-\NewDocumentCommand \GetTitleEn { } { \tl_use:N \g_@@_title_en_tl }
-\NewDocumentCommand \GetAuthor { } { \tl_use:N \g_@@_author_tl }
-\NewDocumentCommand \GetAuthorEn { } { \tl_use:N \g_@@_author_en_tl }
-\NewDocumentCommand \GetStudentId { } { \tl_use:N \g_@@_student_id_tl }
-\NewDocumentCommand \GetSchool { } { \tl_use:N \g_@@_school_tl }
-\NewDocumentCommand \GetMajor { } { \tl_use:N \g_@@_major_tl }
-\NewDocumentCommand \GetMajorEn { } { \tl_use:N \g_@@_major_en_tl }
-\NewDocumentCommand \GetSupervisor { } { \tl_use:N \g_@@_supervisor_tl }
-\NewDocumentCommand \GetSupervisorTitle { } { \tl_use:N \g_@@_supervisor_title_tl }
-\NewDocumentCommand \GetSupervisorEn { } { \tl_use:N \g_@@_supervisor_en_tl }
-\NewDocumentCommand \GetCoSupervisorEn { } { \tl_use:N \g_@@_co_supervisor_en_tl }
-\NewDocumentCommand \GetCoSupervisor { } { \tl_use:N \g_@@_co_supervisor_tl }
-\NewDocumentCommand \GetDate { } { \tl_use:N \g_@@_date_tl }
-\NewDocumentCommand \GetCnKeywords { } { \tl_use:N \g_@@_cn_keywords_tl }
-\NewDocumentCommand \GetEnKeywords { } { \tl_use:N \g_@@_en_keywords_tl }
-% 新增 Getter：语言 / 数学风格 / 预设 / 学位名称
-\NewDocumentCommand \GetLang { } { \tl_use:N \g_@@_lang_tl }
-\NewDocumentCommand \GetMathStyle { } { \tl_use:N \g_@@_math_style_tl }
-\NewDocumentCommand \GetPreset { } { \tl_use:N \g_@@_preset_tl }
-\NewDocumentCommand \GetDegreeName { } { \tl_use:N \g_@@_degree_name_tl }
-\NewDocumentCommand \GetDegreeNameEn { } { \tl_use:N \g_@@_degree_name_en_tl }
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Module Loader
-%% ===================================================================
-%%
-%% \subsection{Module Loader}
-%%
-%% Load a single module file \texttt{sduthesis-<name>.sty}.
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new_protected:Npn \sdu_load_module:n #1 {
-  \file_if_exist:nTF { sduthesis-#1.sty } {
-    \RequirePackage { sduthesis-#1 }
-    \clist_gput_right:Nx \g_@@_module_clist { #1 }
-  } {
-    \msg_warning:nnx { sdutex } { unknown-module } { #1 }
-  }
-}
-%    \end{macrocode}
-%%
-%% \begin{function}{\sdu_load_module:}
-%% Public user-level command to load a module at any point.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \sdu_load_module: { m } {
-  \sdu_load_module:n { #1 }
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% Resolve the pending module requests into a deduplicated load list and
-%% load each module.  Runs inside \cs{AtBeginDocument} so that module
-%% files can rely on the class being fully available.
-%%
-%% \begin{function}{\@@_resolve_module:n}
-%% Convert a raw pending entry (either a real module name or a
-%% \texttt{degree-<name>} placeholder) into the module name(s) to load.
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new_protected:Npn \@@_resolve_module:n #1 {
-  \str_case:nn { #1 } {
-    { degree-bachelor } { \clist_gput_right:Nn \g_@@_module_clist { undergraduate } }
-    { degree-master } { \clist_gput_right:Nn \g_@@_module_clist { master } }
-    { degree-professional } { \clist_gput_right:Nn \g_@@_module_clist { master } }
-    { degree-doctor } { \clist_gput_right:Nn \g_@@_module_clist { doctor } }
-  } {
-    \clist_gput_right:Nn \g_@@_module_clist { #1 }
-  }
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%% \begin{function}{\@@_load_pending_modules:}
-%%    \begin{macrocode}
-%<!CLASS>
-\cs_new_protected:Npn \@@_load_pending_modules: {
-  \clist_map_inline:Nn \g_@@_module_pending_clist {
-    \@@_resolve_module:n { ##1 }
-  }
-  \clist_clear:N \g_@@_module_pending_clist
-  % 去重后加载
-  \clist_map_inline:Nn \g_@@_module_clist {
-    \sdu_load_module:n { ##1 }
-  }
-  \clist_clear:N \g_@@_module_clist
-}
-%    \end{macrocode}
-%% \end{function}
-%%
-%%    \begin{macrocode}
-%<!CLASS>
-\AtBeginDocument {
-  \@@_load_pending_modules:
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Front/back matter hooks
-%% ===================================================================
-%%
-%% \subsection{Front/back matter hooks}
-%%
-%% The kernel exposes \cs{frontmatter}, \cs{mainmatter} and
-%% \cs{backmatter} so the corresponding hooks fire at the right time.
-%%    \begin{macrocode}
-%<!CLASS>
-\RenewDocumentCommand \frontmatter { } {
-  \hook_use:n { sduthesis/frontmatter/begin }
-  \relax
-}
-\RenewDocumentCommand \mainmatter { } {
-  \hook_use:n { sduthesis/mainmatter/begin }
-  \relax
-}
-\RenewDocumentCommand \backmatter { } {
-  \hook_use:n { sduthesis/backmatter/begin }
-  \relax
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Cover Page Dispatcher
-%% ===================================================================
-%%
-%% \subsection{Cover Page Dispatcher}
-%%
-%% \cs{MakeCover} triggers the \texttt{before-cover} and
-%% \texttt{cover-style} hooks.  The actual cover layout is provided by
-%% the loaded degree module via the \texttt{cover-style} hook.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \MakeCover { } {
-  \hook_use:n { sduthesis/before-cover }
-  \hook_use:n { sduthesis/cover-style }
-}
-%    \end{macrocode}
-%%
-%% Legacy lowercase alias for \MakeCover.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \makecover { } { \MakeCover }
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Abstract Environments
-%% ===================================================================
-%%
-%% \subsection{Abstract Environments}
-%%
-%% These are shared by every degree type, so they stay in the kernel.
-%%
-%% Chinese abstract.  支持可选参数设置标题（默认“摘要”）。
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentEnvironment { cnabstract } { o } {
-  \phantomsection
-  \pdfbookmark[0] { 摘要 } { cnabstract }
-  \begin{center}
-    \IfValueTF{#1} {
-      \zihao{3} \bfseries \heiti { #1 }
-    } {
-      \zihao{3} \bfseries \heiti { 摘\qquad 要 }
-    }
-  \end{center}
-  \vspace{12pt}
-  \setlength{\parindent}{1.2em}
-  \zihao{-4}
-}{
-  \vspace{1cm}
-  \par \noindent
-  \zihao{-4} \bfseries \heiti { 关键词： }
-  \zihao{-4} \GetCnKeywords
-  \clearpage
-}
-%    \end{macrocode}
-%%
-%% English abstract.  支持可选参数设置标题（默认 ABSTRACT）。
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentEnvironment { enabstract } { o } {
-  \phantomsection
-  \pdfbookmark[0] { Abstract } { enabstract }
-  \begin{center}
-    \IfValueTF{#1} {
-      \zihao{-2} \bfseries { #1 }
-    } {
-      \zihao{-2} \bfseries { ABSTRACT }
-    }
-  \end{center}
-  \vspace{12pt}
-  \setlength{\parindent}{1.2em}
-  \zihao{-4}
-}{
-  \vspace{1cm}
-  \par \noindent
-  \zihao{-4} \bfseries { Keywords: }
-  \zihao{-4} \GetEnKeywords
-  \clearpage
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Declaration
-%% ===================================================================
-%%
-%% \subsection{Declaration}
-%%
-%% Academic declaration (shared by all degrees).
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \MakeDeclaration { } {
-  \phantomsection
-  \pdfbookmark[0] { 声明 } { declaration }
-  \begin{center}
-    \zihao{3} \bfseries \heiti { 学位论文独创性声明 }
-  \end{center}
-  \vspace{12pt}
-  \setlength{\parindent}{2em}
-  \zihao{-4}
+\NewDocumentCommand \IfBlindReview { m m } { \IfBlindReviewTF { #1 } { #2 } }
 
-  本人郑重声明，所呈交的学位论文，是本人在导师指导下，独立进
-  行研究工作所取得的研究成果。除文中已经标明引用的内容外，本
-  论文不包含任何其他个人或集体已经发表或撰写过的研究成果。对
-  本文的研究做出贡献的个人和集体，均已在文中以明确方式标明。
-
-  本声明的法律结果由本人承担。
-
-  \vspace{2cm}
-  \hfill
-  \begin{tabular}{lcl}
-    学位论文作者签名： & \hspace{3cm} & \\
-    & & \\
-    日期： & \hspace{3cm} & 年 \hspace{1cm} 月 \hspace{1cm} 日 \\
-  \end{tabular}
-
-  \clearpage
-}
-%    \end{macrocode}
-%%
-%% Legacy lowercase alias for \MakeDeclaration.
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \makedeclaration { } { \MakeDeclaration }
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Acknowledgement
-%% ===================================================================
-%%
-%% \subsection{Acknowledgement}
-%%
-%% Acknowledgement environment (shared by all degrees).
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentEnvironment { acknowledgement } { } {
-  \phantomsection
-  \pdfbookmark[0] { 致谢 } { acknowledgement }
-  \begin{center}
-    \zihao{3} \bfseries \heiti { 致\qquad 谢 }
-  \end{center}
-  \vspace{12pt}
-  \setlength{\parindent}{2em}
-  \zihao{-4}
-}{
-  \clearpage
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Appendix
-%% ===================================================================
-%%
-%% \subsection{Appendix}
-%%
-%% Appendix command (shared by all degrees).
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \MakeAppendix { } {
-  \appendix
-  \counterwithin { equation } { chapter }
-  \counterwithin { figure } { chapter }
-  \counterwithin { table } { chapter }
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Section Style
-%% ===================================================================
-%%
-%% \subsection{Section Style}
-%%
-%% Configure section headings.
-%%    \begin{macrocode}
-%<!CLASS>
-\ctexset {
-  chapter = {
-    format = { \heiti \bfseries \centering \zihao{3} },
-    beforeskip = { 0pt },
-    afterskip = { 18pt },
-    number = { \thechapter }
-  },
-  section = {
-    format = { \heiti \bfseries \zihao{4} },
-    beforeskip = { 18pt },
-    afterskip = { 12pt }
-  },
-  subsection = {
-    format = { \kaishu \bfseries \zihao{-4} },
-    beforeskip = { 12pt },
-    afterskip = { 6pt }
-  }
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Header and Footer
-%% ===================================================================
-%%
-%% \subsection{Header and Footer}
-%%
-%% Configure header and footer.  支持通过
-%% \verb|\SDUSetup{ header-left = {...}, header-right = {...} }| 自定义页眉。
-%% 默认页眉左侧为论文标题，右侧为章节名。
-%%    \begin{macrocode}
-%<!CLASS>
-\fancypagestyle{plain}{
-  \fancyhf{}
-  \fancyfoot[C]{\thepage}
-  \renewcommand{\headrulewidth}{0pt}
-}
-
-\fancypagestyle{sduthesis}{
-  \fancyhf{}
-  \fancyfoot[C]{\thepage}
-  \renewcommand{\headrulewidth}{0.4pt}
-  \tl_if_empty:NTF \g_@@_header_left_tl {
-    \fancyhead[L]{\zihao{-5} \GetTitle}
-  } {
-    \fancyhead[L]{\zihao{-5} \tl_use:N \g_@@_header_left_tl}
-  }
-  \tl_if_empty:NTF \g_@@_header_right_tl {
-    \fancyhead[R]{\zihao{-5} \leftmark}
-  } {
-    \fancyhead[R]{\zihao{-5} \tl_use:N \g_@@_header_right_tl}
-  }
-}
-
-\pagestyle{plain}
-%    \end{macrocode}
-%%
-%% \subsection{List of Figures and Tables}
-%%
-%% 图表目录命令（硬缺失功能补充）。
-%%    \begin{macrocode}
-%<!CLASS>
-\NewDocumentCommand \ListOfFigures { } {
-  \phantomsection
-  \pdfbookmark[0] { 图目录 } { listoffigures }
-  \listoffigures
-}
-\NewDocumentCommand \ListOfTables { } {
-  \phantomsection
-  \pdfbookmark[0] { 表目录 } { listoftables }
-  \listoftables
-}
-%    \end{macrocode}
-%%
-%% \subsection{Theorem Environment Enhancement}
-%%
-%% 增强定理环境：补充常用定理样式，并支持 \verb|math-style| 选项。
-%%    \begin{macrocode}
-%<!CLASS>
-% 根据 math-style 调整数学风格
-\str_case:Vn \g_@@_math_style_tl {
-  { french } {
-    \AtBeginDocument { \let\div\relax }
-  }
-}
-% 定理环境（已在前面定义 definition/theorem/lemma/corollary/proposition）
-% 补充：assumption（假设）、conjecture（猜想）、remark（注）、example（例）
-\theoremstyle{plain}
-\newtheorem{assumption}{假设}
-\newtheorem{conjecture}{猜想}
-\newtheorem*{remark}{注}
-\theoremstyle{definition}
-\newtheorem{example}{例}
-% 定理环境的章节编号
-\counterwithin{theorem}{chapter}
-\counterwithin{definition}{chapter}
-\counterwithin{lemma}{chapter}
-\counterwithin{corollary}{chapter}
-\counterwithin{proposition}{chapter}
-\counterwithin{assumption}{chapter}
-\counterwithin{conjecture}{chapter}
-\counterwithin{example}{chapter}
-%    \end{macrocode}
-%%
-%% Message definitions.
-%%    \begin{macrocode}
-%<!CLASS>
-\msg_new:nnn { sdutex } { unknown-module } {
-  Module~'#1'~not~found.~Expected~'sduthesis-#1.sty'.~
-  Available~modules:~undergraduate,~master,~doctor,~blindreview.
-}
-%    \end{macrocode}
-%%
-%% ===================================================================
-%% Closing
-%% ===================================================================
-%%
-%%    \begin{macrocode}
-%<!CLASS>
 \ExplSyntaxOff
 %    \end{macrocode}
-%%
-\Finale
+%
+% \subsection{宏包加载}
+%
+%    \begin{macrocode}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{unicode-math}
+\usepackage{xeCJK}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{bookmark}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{tocloft}
+\usepackage{subfig}
+\usepackage[
+    backend=biber,
+    style=gb7714-2015,
+    gbnamefmt=givenahead
+]{biblatex}
+\usepackage{hyperref}
+\usepackage{etoolbox}
+\usepackage{tabularx}
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+%    \end{macrocode}
+%
+% \subsection{算法设置}
+%
+%    \begin{macrocode}
+\AtBeginEnvironment{algorithm}{\linespread{0.85}\selectfont}
+%    \end{macrocode}
+%
+% \subsection{字体引擎}
+%
+% 先释放 ctex 预定义的字体命令，再用 Fandol 重新定义。
+% \cs{let\textbackslash songti\textbackslash relax} 是必要的，
+% 否则 \cs{newCJKfontfamily} 会报 ``already defined'' 错误。
+%
+%    \begin{macrocode}
+\let\songti\relax
+\let\heiti\relax
+\let\kaiti\relax
+
+\newCJKfontfamily\songti{FandolSong}
+\newCJKfontfamily\heiti{FandolHei}
+\newCJKfontfamily\kaiti{FandolKai}
+
+\newcommand{\song}[1]{{\songti{#1}}}
+\newcommand{\hei}[1]{{\heiti{#1}}}
+\newcommand{\kai}[1]{{\kaiti{#1}}}
+
+\newcommand{\bfsong}[1]{{\songti\textbf{#1}}}
+\newcommand{\bfhei}[1]{{\heiti\textbf{#1}}}
+\newcommand{\bfkai}[1]{{\kaiti\textbf{#1}}}
+\newcommand{\itsong}[1]{{\songti\textit{#1}}}
+\newcommand{\ithei}[1]{{\heiti\textit{#1}}}
+\newcommand{\itkai}[1]{{\kaiti\textit{#1}}}
+\newcommand{\bfitsong}[1]{{\songti\textbf{\textit{#1}}}}
+\newcommand{\bfithei}[1]{{\heiti\textbf{\textit{#1}}}}
+\newcommand{\bfitkai}[1]{{\kaiti\textbf{\textit{#1}}}}
+
+\newcommand{\allbfsong}{\songti\bfseries}
+\newcommand{\allbfhei}{\heiti\bfseries}
+\newcommand{\allbfkai}{\kaiti\bfseries}
+\newcommand{\allitsong}{\songti\itshape}
+\newcommand{\allithei}{\heiti\itshape}
+\newcommand{\allitkai}{\kaiti\itshape}
+\newcommand{\allbfitsong}{\songti\bfseries\itshape}
+\newcommand{\allbfithei}{\heiti\bfseries\itshape}
+\newcommand{\allbfitkai}{\kaiti\bfseries\itshape}
+%    \end{macrocode}
+%
+% 英文字体和数学字体使用 LaTeX 默认，不显式指定。
+% 用户可在 sdusetup.tex 中用 \cs{setmainfont} 等命令自定义。
+%
+% 默认小四号宋体：
+%
+%    \begin{macrocode}
+\AtBeginDocument{\zihao{-4}\songti}
+%    \end{macrocode}
+%
+% 行距：
+%
+%    \begin{macrocode}
+\setstretch{1.5}
+%    \end{macrocode}
+%
+% \subsection{页面引擎}
+%
+%    \begin{macrocode}
+\geometry{
+    a4paper,
+    left=3cm,
+    right=3cm,
+    top=2.5cm,
+    bottom=2.5cm,
+}
+\raggedbottom
+%    \end{macrocode}
+%
+% \subsection{章节引擎}
+%
+%    \begin{macrocode}
+\setcounter{secnumdepth}{3}
+
+\ctexset{
+    chapter={
+      format=\centering\zihao{3}\allbfhei,
+      name={第,章},
+      beforeskip=21.6pt,
+      afterskip=18pt,
+      fixskip=true,
+     },
+    section={
+      format=\zihao{4}\allbfhei,
+      name={},
+      beforeskip=18pt,
+      afterskip=18pt,
+      fixskip=true,
+     },
+    subsection={
+      format=\zihao{-4}\allbfhei,
+      name={},
+      beforeskip=18pt,
+      afterskip=18pt,
+      fixskip=true,
+    }
+}
+%    \end{macrocode}
+%
+% \subsection{交叉引用引擎}
+%
+%    \begin{macrocode}
+\definecolor{linkdarkblue}{rgb}{0,0.08,0.45}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    filecolor=black,
+    urlcolor=linkdarkblue,
+    bookmarksnumbered=true,
+    pdfstartview=FitH,
+}
+
+\newcommand{\equref}[1]{式\ \eqref{#1}\ }
+\newcommand{\tabref}[1]{表\ \ref{#1}\ }
+\newcommand{\figref}[1]{图\ \ref{#1}\ }
+\newcommand{\subfigref}[1]{{图\ \subref*{#1}\ }}
+\let\citing\supercite
+\let\citex\citep
+%    \end{macrocode}
+%
+% 引用命令的效果与说明：
+%
+% \begin{longtable}{lll}
+% \toprule
+% \textbf{命令} & \textbf{效果} & \textbf{说明} \\
+% \midrule
+% \endhead
+% \cs{equref}    & 式~\ref{eq:demo} & 引用公式（自动加"式"前缀） \\
+% \cs{tabref}    & 表~\ref{tab:demo} & 引用表格 \\
+% \cs{figref}    & 图~\ref{fig:demo} & 引用图片 \\
+% \cs{subfigref} & 图~\cs{subref}*\{fig:demo\} & 引用子图 \\
+% \bottomrule
+% \end{longtable}
+%
+% \subsection{图表标题引擎}
+%
+%    \begin{macrocode}
+\graphicspath{{figures/}}
+
+\DeclareCaptionFont{mybfsong}{\allbfsong}
+\DeclareCaptionFont{mywuhao}{\zihao{5}}
+\DeclareSubrefFormat{mysubref}{#1(#2)}
+
+\captionsetup[figure]{
+    position=below,
+    font={mywuhao,stretch=1.0},
+    labelfont=mybfsong,
+    textfont=mybfsong,
+    labelsep=quad,
+    margin=40pt,
+    belowskip=-4pt,
+}
+\captionsetup[table]{
+    position=above,
+    font={mywuhao,stretch=1.0},
+    labelfont=mybfsong,
+    textfont=mybfsong,
+    labelsep=quad,
+    margin=40pt,
+    belowskip=4pt,
+}
+\captionsetup[subfloat]{
+    position=below,
+    font={mywuhao,stretch=1.0},
+    labelfont=mybfsong,
+    textfont=mybfsong,
+    subrefformat=mysubref,
+}
+%    \end{macrocode}
+%
+% \subsection{数学快捷命令}
+%
+% 提供三个常用的数学常数/虚数单位命令，自动进入数学模式。
+%
+%    \begin{macrocode}
+\newcommand{\mye}{\ensuremath{\mathrm{e}}}
+\newcommand{\myi}{\ensuremath{\mathrm{i}}}
+\newcommand{\myj}{\ensuremath{\mathrm{j}}}
+%    \end{macrocode}
+%
+% 各命令的效果与说明：
+%
+% \begin{longtable}{lll}
+% \toprule
+% \textbf{命令} & \textbf{效果} & \textbf{说明} \\
+% \midrule
+% \endhead
+% \cs{mye} & $\mathrm{e}$ & 自然底数 \\
+% \cs{myi} & $\mathrm{i}$ & 虚数单位 \\
+% \cs{myj} & $\mathrm{j}$ & 复数单位（工程习惯） \\
+% \bottomrule
+% \end{longtable}
+%
+% \subsection{代码排版引擎}
+%
+%    \begin{macrocode}
+\lstset{
+  belowskip=0pt,
+  language=C++,
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=5pt,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray},
+  framexleftmargin=1em,
+  xleftmargin=2em,
+  captionpos=b,
+  showstringspaces=false,
+  tabsize=4,
+  columns=flexible,
+  backgroundcolor=\color{gray!5},
+  morekeywords={constexpr, nullptr, Ciphertext, Plaintext, vector,
+    load_from_file, save_to_file}
+}
+%    \end{macrocode}
+%
+% \subsection{占位命令}
+%
+% 这些命令在 cls 中提供默认空实现，模块加载后通过
+% \cs{renewcommand} 覆盖。
+%
+% 封面页占位。
+%
+%    \begin{macrocode}
+\newcommand{\makecoverpage}{%
+  \PackageWarning{sduthesis}{No~cover~page~defined.~Please~load~a~module~via~SDUSetup.}%
+}
+%    \end{macrocode}
+%
+% 声明页占位（盲审模块可覆盖以跳过声明页）。
+%
+%    \begin{macrocode}
+\newcommand{\makestatement}{%
+  \PackageWarning{sduthesis}{No~statement~page~defined.~Please~load~a~module~via~SDUSetup.}%
+}
+%    \end{macrocode}
+%
+% 答辩委员会页占位（master/doctor 模块覆盖；盲审模式下整页跳过）。
+%
+%    \begin{macrocode}
+\newcommand{\makecommittee}{%
+  \PackageWarning{sduthesis}{No~committee~page~defined.~Please~load~a~module~via~SDUSetup.}%
+}
+%    \end{macrocode}
+%
+% 中文摘要占位。
+%
+%    \begin{macrocode}
+\newenvironment{cnabstract}{}{}
+%    \end{macrocode}
+%
+% 英文摘要占位。
+%
+%    \begin{macrocode}
+\newenvironment{enabstract}{}{}
+%    \end{macrocode}
+%
+% 中文关键词占位。
+%
+%    \begin{macrocode}
+\newcommand{\cnkeywords}[1]{}
+%    \end{macrocode}
+%
+% 英文关键词占位。
+%
+%    \begin{macrocode}
+\newcommand{\enkeywords}[1]{}
+%    \end{macrocode}
+%
+% \subsection{通用环境定义}
+%
+% 参考文献打印命令：
+%
+%    \begin{macrocode}
+\addbibresource{data/ref/references.bib}
+\renewcommand{\bibfont}{\zihao{5}}
+
+\newcommand{\printbib}{
+    \newpage
+    \setstretch{1}
+    \phantomsection
+    \addcontentsline{toc}{chapter}{参考文献}
+    \chapter*{参考文献}
+    \printbibliography[heading=none]
+}
+%    \end{macrocode}
+%
+% 致谢环境：
+%
+%    \begin{macrocode}
+\newenvironment{myacknowledgement}{
+    \newpage
+    \setstretch{1.5}
+    \phantomsection
+    \addcontentsline{toc}{chapter}{致谢}
+    \chapter*{致\quad 谢}
+    \zihao{-4}
+}{
+    \clearpage
+}
+%    \end{macrocode}
+%
+% 附录环境：
+% 直接 \cs{appendix} 切换编号，由数据文件中的 \cs{chapter} 生成“附录A/B/C”章节标题。
+% 注意：不要在此处再 \cs{chapter} 加星号参数（会产生独立的“附录”空白标题页）。
+%
+%    \begin{macrocode}
+\newenvironment{myappendix}{
+    \newpage
+    \setstretch{1.5}
+    \phantomsection
+    \appendix
+    \zihao{-4}
+    \renewcommand{\theequation}{\thechapter.\arabic{equation}}
+    \renewcommand{\thetable}{\thechapter.\arabic{table}}
+    \renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+}{
+    \clearpage
+}
+%    \end{macrocode}
+%
+% 目录命令：
+%
+%    \begin{macrocode}
+\newcommand{\maketable}{
+    \renewcommand{\cleardoublepage}{\clearpage}
+    \setcounter{page}{1}
+    \fancypagestyle{plain}{
+        \fancyhf{}
+        \renewcommand{\thepage}{\Roman{page}}
+        \renewcommand{\headrulewidth}{0pt}
+        \fancyfoot[C]{\zihao{-5}\thepage}
+    }
+    \pagestyle{plain}
+
+    \renewcommand{\contentsname}{目\quad 录}
+    \renewcommand{\cfttoctitlefont}{\hfill\zihao{-2}}
+    \renewcommand{\cftaftertoctitle}{\hfill}
+    \renewcommand{\cftbeforetoctitleskip}{12pt}
+    \renewcommand{\cftaftertoctitleskip}{12pt}
+    \renewcommand{\cftdotsep}{1.5}
+    \renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+    \setlength{\cftbeforechapskip}{0pt}
+
+    \phantomsection
+    \hypertarget{tableofcontent}{}
+    \bookmark[dest=tableofcontent,level=0]{目录}
+    \tableofcontents
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\endinput
+%    \end{macrocode}
+%</cls>
+%
+% \section{许可证}
+%
+% 本模板使用 LPPL-1.3c 协议发布。
+% 详见项目根目录的 LICENSE 文件。
+%
+% \Finale
 \endinput

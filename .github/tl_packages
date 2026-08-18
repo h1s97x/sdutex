@@ -41,6 +41,12 @@ cm-unicode
 # class runtime deps
 xcolor
 geometry
+biblatex
+gb7714-2015
+tocloft
+bookmark
+tabularx
+biber
 amsmath
 amscls
 amsfonts

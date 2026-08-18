@@ -1,222 +1,137 @@
 # SDUTeX 内部实现文档
 
-本文档详细描述 SDUTeX 的内部实现细节，供开发者参考。
+本文档详细描述 SDUTeX 的内部实现细节，供开发者参考。当前实现与示例模板仓库 **sduthesis v2.2.0** 完全对齐。
 
 ## 代码结构
 
+`src/sduthesis.dtx`（内核）结构：
+
 ```
 sduthesis.dtx
-├── 全局变量定义
-├── 辅助函数
-├── 选项解析
-├── 基础类加载
+├── 存储层：变量声明（tl / dim / bool）
+├── 定义层：l3keys 键注册（sdu/info、sdu/option、sdu 顶层）
+├── 命令层：\SDUSetup
+├── 导出层：Getter 命令
+├── 模块加载器：\sdu_load_module:
+├── Hook 系统：6 个命名钩子
 ├── 宏包加载
-├── 页面布局
-├── 样式配置
-├── 用户配置接口
-├── 封面生成
-├── 摘要环境
-├── 声明
-├── 致谢
-├── 附录
-└── 章节样式
+├── 字体引擎
+├── 页面 / 章节 / 交叉引用 / 图表标题 / 数学 / 代码排版引擎
+├── 占位命令与环境（模块可覆盖）
+└── 通用环境定义（printbib / myacknowledgement / myappendix / maketable）
 ```
 
 ## 命名约定
 
 ### 命名空间
 
-- `@@` = `sdu`（内部前缀）
-- 使用 `\ExplSyntaxOn` 启用现代语法
+- 模块前缀：`sdu`
+- 内部变量使用 `\l__sdu_<名称>_tl`（`l` 局部、`__sdu` 模块前缀）
+- 使用 `\ExplSyntaxOn` 启用 LaTeX3 语法（内核核心逻辑）；模块采用 `\AddToHook` + 传统命令混合风格
 
 ### 变量命名
 
 | 类型 | 前缀 | 示例 |
 |------|------|------|
-| 整数 | `\g_@@_type_int` | 论文类型 |
-| 布尔 | `\g_@@_blind_bool` | 盲审模式 |
-| 文本 | `\g_@@_title_tl` | 论文标题 |
-| 长度 | `\g_@@_cover_label_width_dim` | 封面标签宽度 |
+| token list | `\l__sdu_..._tl` | `\l__sdu_title_tl` |
+| dimension | `\l__sdu_..._dim` | `\l__sdu_line_spread_dim` |
+| bool | `\l__sdu_..._bool` | `\l__sdu_blindreview_bool` |
+| seq | `\l__sdu_..._seq` | `\l__sdu_module_seq` |
 
-### 函数命名
+## 存储变量
 
-| 类型 | 模式 | 示例 |
-|------|------|------|
-| 条件函数 | `\@@_if_xxx:TF` | `\@@_if_type_bachelor:TF` |
-| 内部函数 | `\@@_xxx:` | `\@@_make_cover_bachelor:` |
-| 用户命令 | `\MakeCover` | 封面命令 |
-
-## 全局变量
-
-### 论文类型 (`\g_@@_type_int`)
+### 论文信息（info 组）
 
 ```latex
-1 = bachelor  (本科生)
-2 = master   (学术型硕士)
-3 = professional (专业型硕士)
-4 = doctor   (博士)
+\l__sdu_title_tl        % 标题
+\l__sdu_author_tl       % 作者
+\l__sdu_studentid_tl    % 学号
+\l__sdu_school_tl       % 学院
+\l__sdu_major_tl        % 专业
+\l__sdu_supervisor_tl   % 指导教师
+\l__sdu_year_tl         % 年份
+\l__sdu_month_tl        % 月份
 ```
 
-### 模式开关
+### 学位信息（master 模块）
 
 ```latex
-\g_@@_blind_bool     % 盲审模式
-\g_@@_twoside_bool   % 双面打印
+\l__sdu_degree_tl               % 学位类型（默认“硕士”）
+\l__sdu_committee_chair_tl      % 答辩委员会主席
+\l__sdu_committee_members_tl    % 答辩委员会委员
+\l__sdu_defense_date_tl         % 答辩日期
+\l__sdu_defense_place_tl        % 答辩地点
 ```
 
-### 用户配置变量
+### 样式（option 组）
 
 ```latex
-\g_@@_title_tl          % 中文标题
-\g_@@_title_en_tl       % 英文标题
-\g_@@_author_tl          % 作者
-\g_@@_author_en_tl       % 英文作者
-\g_@@_student_id_tl     % 学号
-\g_@@_school_tl          % 学院
-\g_@@_major_tl           % 专业
-\g_@@_major_en_tl        % 英文专业
-\g_@@_supervisor_tl      % 导师
-\g_@@_supervisor_title_tl % 导师职称
-\g_@@_supervisor_en_tl   % 英文导师
-\g_@@_co_supervisor_tl  % 合作导师
-\g_@@_co_supervisor_en_tl % 英文合作导师
-\g_@@_date_tl            % 日期
-\g_@@_cn_keywords_tl     % 中文关键词
-\g_@@_en_keywords_tl     % 英文关键词
+\l__sdu_line_spread_dim     % 行距倍数（默认 1.5）
+\l__sdu_page_left_tl        % 左边距（默认 3cm）
+\l__sdu_page_right_tl       % 右边距（默认 3cm）
+\l__sdu_page_top_tl         % 上边距（默认 2.5cm）
+\l__sdu_page_bottom_tl      % 下边距（默认 2.5cm）
 ```
 
-## 辅助函数
-
-### 类型判断
+### 模块与盲审
 
 ```latex
-\@@_if_type_bachelor:TF {true} {false}
-\@@_if_type_master:TF {true} {false}
-\@@_if_type_doctor:TF {true} {false}
-\@@_if_type_professional:TF {true} {false}
+\l__sdu_module_tl                % module 键原始值
+\l__sdu_module_seq               % 拆分后的模块序列
+\l__sdu_blindreview_bool         % 盲审标志
+\l__sdu_has_blindreview_bool     % 是否含盲审模块
+\l__sdu_has_base_module_bool     % 是否含基础模块
 ```
 
-### 盲审处理
+## 配置系统
 
-```latex
-\@@_secret_info:n {张三}
-% 正常模式：张三
-% 盲审模式：███
+`\SDUSetup{...}` 通过 `\keys_set:nn { sdu } { ... }` 解析，支持：
 
-\@@_secret_info_fixed:Nn \g_@@_student_id_tl {10}
-% 正常模式：2021001234
-% 盲审模式：██████████
-```
+- **嵌套分组**：`info={...}` → `\keys_set:nn { sdu/info }`；`option={...}` → `\keys_set:nn { sdu/option }`
+- **顶层平铺**：旧写法兼容（`title` / `author` 等直接写在顶层）
 
-## 选项系统
+## 模块加载器
 
-### 文档类选项
+`\sdu_load_module:` 在 `\begin{document}` 时执行（由 `\AddToHook { begindocument }` 触发）：
 
-```latex
-\documentclass[degree=bachelor]{sduthesis}
-\documentclass[degree=master,blind]{sduthesis}
-```
+1. 分割 `module` 列表（逗号分隔），去空白、跳空项
+2. 预扫描判断是否含 `blindreview`、是否已有基础模块
+3. `blindreview` 单独使用时前置加载本科模块
+4. 按用户顺序加载各模块：`\RequirePackage{sduthesis-<name>}`
 
-可选值：
-- `degree`: `bachelor`, `master`, `professional`, `doctor`
-- `blind`: `true`, `false`
-- `twoside`: `true`, `false`
+## 盲审标志
 
-### 用户配置
+`blindreview` 模块加载时置 `\l__sdu_blindreview_bool` 为真。基础模块通过 `\IfBlindReviewTF` / `\IfBlindReviewF` 决定封面个人信息行是否输出、答辩委员会页是否跳过。
 
-```latex
-\SDUSetup{
-  title = {论文标题},
-  author = {作者姓名},
-  student-id = {学号},
-  school = {学院名称},
-  major = {专业名称},
-  supervisor = {导师姓名},
-  supervisor-title = {导师职称},
-  date = {2025}年6月
-}
-```
+## 核心命令与环境
 
-## 核心命令
-
-### 封面
-
-```latex
-\MakeCover  % 生成封面
-```
-
-会根据论文类型自动选择：
-- 本科生：本科生封面
-- 研究生：硕士/博士封面
-
-### 摘要环境
-
-```latex
-\begin{cnabstract}
-  中文摘要内容
-\end{cnabstract}
-
-\begin{enabstract}
-  English abstract content
-\end{enabstract}
-```
-
-### 致谢
-
-```latex
-\begin{acknowledgement}
-  感谢内容
-\end{acknowledgement}
-```
-
-### 附录
-
-```latex
-\MakeAppendix
-% 之后的内容将作为附录
-```
-
-## 样式配置
-
-### 页面布局
-
-```latex
-\geometry{
-  top = 3.0cm,
-  bottom = 2.5cm,
-  left = 3.0cm,
-  right = 2.5cm
-}
-```
-
-### 章节标题
-
-| 级别 | 字体 | 字号 |
-|------|------|------|
-| chapter | 黑体 | 三号 |
-| section | 黑体 | 四号 |
-| subsection | 楷体 | 小四号 |
+| 命令/环境 | 说明 | 定义位置 |
+|-----------|------|----------|
+| `\makecoverpage` | 封面（模块覆盖） | 内核占位，模块 `\renewcommand` |
+| `\makestatement` | 声明页（盲审可跳过） | 内核占位 |
+| `\makecommittee` | 答辩委员会页（master 模块） | 内核占位 |
+| `cnabstract` / `enabstract` | 中英文摘要 | 内核占位，模块覆盖 |
+| `\cnkeywords` / `\enkeywords` | 关键词 | 内核占位 |
+| `\printbib` | 参考文献（biblatex/biber） | 内核 |
+| `myacknowledgement` | 致谢环境 | 内核 |
+| `myappendix` | 附录环境 | 内核 |
+| `\maketable` | 目录 | 内核 |
 
 ## 依赖宏包
 
 | 宏包 | 用途 |
 |------|------|
 | `ctexbook` | 中文支持（基础类） |
+| `expl3` / `l3keys2e` | LaTeX3 编程与键值解析 |
 | `geometry` | 页面布局 |
 | `fancyhdr` | 页眉页脚 |
 | `graphicx` | 图形 |
-| `amsmath` | 数学公式 |
-| `amssymb` | 数学符号 |
-| `amsthm` | 定理环境 |
-| `hyperref` | 超链接 |
-| `xeCJKfntef` | 中文字形标注 |
-| `sduthesis.bst` | 参考文献样式（自定义） |
+| `amsmath` / `amsthm` / `amsfonts` / `amssymb` | 数学与定理环境 |
+| `unicode-math` / `xeCJK` | 数学与中文 |
+| `biblatex`（biber, gb7714-2015） | 参考文献 |
+| `bookmark` / `hyperref` | 书签与超链接 |
+| `algorithm` / `algorithmicx` / `algpseudocode` | 算法环境 |
 
-## 版本历史
+## 测试体系
 
-### v1.0.0 (2024-12-01)
-
-- 初始版本
-- 支持本科生/研究生论文
-- 支持盲审模式
-- 包含封面、摘要、致谢等环境
+采用 l3build `.tex/.tlg` 回归测试（`test/` 目录），支持 xetex/luatex 双引擎。测试文件通过 `\input{regression-test}` + `\START/\END` 产生基线。

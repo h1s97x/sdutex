@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-08-18
+
+### Changed
+
+- **架构反向同步（以 sduthesis 为准）**：将 sduthesis 示例模板仓库已验证成熟的 `src/sduthesis.dtx` + `modules/*.sty` + `build.lua` + 回归测试体系同步回核心包 sdutex，消除"双仓库漂移"，恢复"核心包 → 示例模板"的单一真源
+- **内核接口对齐 sduthesis v2.2.0**：`sduthesis.cls` 采用 ctexbook + Hook 插件化架构，`\SDUSetup` 支持 `info={...}` / `option={...}` 嵌套分组（也保留顶层平铺写法向后兼容）
+- **模块体系对齐**：`module=` 键支持逗号分隔多模块组合（如 `{master, blindreview}`），盲审单独使用时自动前置加载本科模块
+- **Hook 系统**：6 个文档阶段钩子（`after-setup` / `before-cover` / `cover-style` / `frontmatter/begin` / `mainmatter/begin` / `backmatter/begin`），模块通过 `\AddToHook` 注入行为
+- **博士学位论文**：由 `master` 模块的 `degree={博士}` 键覆盖（不再需要独立的 doctor 模块）
+- **参考文献**：改用 biblatex/biber（GB/T 7714-2015），`sduthesis.bst` 保留作为传统 LaTeX 工程兜底
+
+### Added
+
+- **回归测试体系**：采用 l3build `.tex/.tlg` 回归测试，覆盖 cover / abstract / appendix / bib / blindreview / master / master-blindreview / nested-setup / toc，支持 xetex/luatex 双引擎
+- **master 模块**：硕博封面 + 答辩委员会页（`\makecommittee`），新增 `degree` / `committeeChair` / `committeeMembers` / `defenseDate` / `defensePlace` 配置键与对应 Getter
+- **盲审模块**：`\IfBlindReviewTF` / `\IfBlindReviewF` 标志命令，封面个人信息行隐藏、答辩委员会页整页跳过
+
+### Removed
+
+- 移除独立的 `doctor` 模块（博士学位论文统一由 `module={master}` + `degree={博士}` 覆盖）
+- 移除旧式集成测试（`test_*.tex`），替换为 l3build 回归测试
+
 ## [1.1.0] - 2026-08-18
 
 ### Changed
@@ -72,8 +94,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `doc/DEVELOP.md`
   - `doc/ARCHITECTURE.md`
 - Makefile for build automation
-
-### Planned for v1.1.0
-
-- More test coverage
-- CTAN release

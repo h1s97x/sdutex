@@ -8,19 +8,22 @@
 
 ## 简介
 
-SDUTeX 是山东大学学位论文 LaTeX 模板的核心代码仓库，提供：
-- `sduthesis.cls` - 学位论文文档类
+SDUTeX 是山东大学学位论文 LaTeX 模板的**核心代码仓库**，提供：
+- `sduthesis.cls` - 学位论文文档类（内核 + 模块 + Hook 插件化架构）
 - `sdutex.sty` - 工具宏包
-- `sduthesis.bst` - 参考文献样式 (GB/T 7714-2015)
+- `sduthesis.bst` - 参考文献样式 (GB/T 7714-2015，传统 LaTeX 工程兜底)
+
+配套的 **sduthesis** 是示例模板仓库，供用户开箱即用；本仓库是"引擎"，两者共同构成完整生态。
 
 ## 特性
 
-- 支持本科、硕士、博士学位论文
-- 支持中英文论文
-- 支持盲审模式
+- 支持本科、硕士学位论文（博士学位论文通过 `degree={博士}` 覆盖）
+- 支持盲审模式（隐藏个人信息、跳过答辩委员会页）
+- 支持多模块组合加载：`module = {master, blindreview}`
 - 遵循山东大学论文格式规范
-- 基于 LaTeX3 现代化语法
-- 完整的自动化测试
+- 基于 `\SDUSetup` 集中配置 + LaTeX3 l3keys 机制
+- 基于 ctexbook 原生中文排版，兼容 Overleaf
+- 完整的 l3build 回归测试（xetex/luatex 双引擎）
 
 ## 安装
 
@@ -36,212 +39,121 @@ l3build install
 
 ### 方式二：直接使用
 
-将 `src/` 目录下的 `.cls`、`.sty`、`.bst` 文件复制到你的项目目录。
+将 `src/` 目录解包生成的 `sduthesis.cls` 与 `modules/` 下的模块 `.sty` 复制到你的项目目录（或使用配套示例模板仓库 sduthesis）。
 
 ## 快速开始
 
-### 方式一：推荐（info 分组键值，对齐 SJTUTeX）
+通过 `\SDUSetup` 集中配置论文信息，支持 `info` / `option` 嵌套分组：
 
 ```latex
-\documentclass[degree=bachelor]{sduthesis}
+\documentclass{sduthesis}
 
 \SDUSetup{
+  module = {undergraduate},        % 论文类型：undergraduate / master，可叠加 blindreview
   info = {
-    zh/title = {基于深度学习的图像识别研究},
-    en/title = {Research on Deep Learning based Image Recognition},
-    zh/author = {张三},
-    en/author = {Zhang San},
-    zh/school = {计算机科学与技术学院},
-    zh/major = {计算机科学与技术},
-    en/major = {Computer Science and Technology},
-    zh/supervisor = {李教授},
-    zh/supervisor-title = {教授},
-    zh/student-id = {2021001234},
-    zh/date = {2025年6月},
-    zh/keywords = {深度学习, 图像识别},
-    en/keywords = {Deep Learning, Image Recognition}
-  }
+    title      = {基于深度学习的图像识别研究},
+    author     = {张三},
+    studentId  = {2021001234},
+    school     = {计算机科学与技术学院},
+    major      = {计算机科学与技术},
+    supervisor = {李四 教授},
+    year       = {2025},
+    month      = {6},
+  },
+  option = {
+    lineSpread = 1.5,              % 行距
+    pageLeft   = 3cm,              % 页边距
+  },
 }
 
 \begin{document}
 
-% 生成封面
-\MakeCover
+\frontmatter
+\makecoverpage                     % 封面（由模块提供）
 
-% 中文摘要
-\begin{cnabstract}
+\begin{cnabstract}                 % 中文摘要
 本文研究了基于深度学习的图像识别方法...
+\cnkeywords{深度学习, 图像识别}
 \end{cnabstract}
 
-% 英文摘要
-\begin{enabstract}
-This paper studies image recognition methods based on deep learning...
-\end{enabstract}
+\maketable                         % 目录
 
-% 目录
-\tableofcontents
-
-% 图表目录
-\ListOfFigures
-\ListOfTables
-
-% 正文
+\mainmatter
 \chapter{引言}
 ...
 
-\end{document}
-```
-
-### 方式二：旧式写法（向后兼容）
-
-```latex
-\documentclass[degree=bachelor]{sduthesis}
-
-\SDUSetup{
-  title = {基于深度学习的图像识别研究},
-  title* = {Research on Deep Learning based Image Recognition},
-  author = {张三},
-  author* = {Zhang San},
-  school = {计算机科学与技术学院},
-  major = {计算机科学与技术},
-  supervisor = {李教授},
-  supervisor-title = {教授},
-  student-id = {2021001234},
-  date = {2025年6月}
-}
-
-\begin{document}
-
-% 生成封面
-\MakeCover
-
-% 中文摘要
-\begin{cnabstract}
-本文研究了基于深度学习的图像识别方法...
-\end{cnabstract}
-
-% 英文摘要
-\begin{enabstract}
-This paper studies image recognition methods based on deep learning...
-\end{enabstract}
-
-% 目录
-\tableofcontents
-
-% 正文
-\chapter{引言}
-...
+% 参考文献（biblatex/biber）
+\printbib
 
 \end{document}
 ```
 
 ## 配置选项
 
-### 文档类选项
+### `\SDUSetup` 键值
 
-| 选项 | 值 | 说明 |
+`module` 键指定论文模块，`info` 组收纳论文元数据，`option` 组收纳排版参数。也支持顶层平铺写法（向后兼容）。
+
+| 分组 | 键 | 说明 |
 |------|-----|------|
-| `degree` | `bachelor` / `master` / `professional` / `doctor` | 学位类型 |
-| `blind` | `true` / `false` | 盲审模式 |
-| `twoside` | `true` / `false` | 双面打印 |
-| `lang` | `zh` / `en` / `zh-en` / `en-zh` | 文档语言 |
-| `math-style` | `ISO` / `GB` / `french` / `upright` | 数学风格 |
-| `preset` | `sdu` / `sjtu` / `none` | 预设风格 |
-| `module` | 逗号分隔列表 | 组合加载模块 |
+| `module` | `module` | 模块列表，逗号分隔（`undergraduate` / `master` / `blindreview`） |
+| `info` | `title` / `author` / `studentId` / `school` / `major` / `supervisor` / `year` / `month` | 论文基本信息 |
+| `info` | `degree` / `committeeChair` / `committeeMembers` / `defenseDate` / `defensePlace` | 学位信息（master 模块） |
+| `option` | `lineSpread` / `pageLeft` / `pageRight` / `pageTop` / `pageBottom` | 排版参数 |
 
-> **注意**：`math-style`（及 `preset`）作为文档类选项在类加载时即生效。若在导言区通过 `\SDUSetup{ math-style = ... }` 修改，仅对后续设置生效，且不会重新触发类加载时的样式调整。
+### Getter 命令
 
-### info 分组键值
+内核导出若干 Getter 命令，供模块与用户读取配置值：
 
-`\SDUSetup{ info = {...} }` 支持中英双语在同一配置块分组配置：
-
-```latex
-\SDUSetup{
-  info = {
-    zh/title = {...},
-    en/title = {...},
-    zh/author = {...},
-    en/author = {...},
-    zh/student-id = {...},
-    zh/school = {...},
-    zh/major = {...},
-    en/major = {...},
-    zh/supervisor = {...},
-    zh/supervisor-title = {...},
-    en/supervisor = {...},
-    zh/co-supervisor = {...},
-    en/co-supervisor = {...},
-    zh/date = {...},
-    zh/keywords = {...},
-    en/keywords = {...}
-  }
-}
-```
+`\GetTitle` `\GetAuthor` `\GetStudentId` `\GetSchool` `\GetMajor` `\GetSupervisor` `\GetYear` `\GetMonth` `\GetDegree` `\GetCommitteeChair` `\GetCommitteeMembers` `\GetDefenseDate` `\GetDefensePlace`
 
 ## 插件化架构（内核 + 模块 + Hook）
 
-SDUTeX v1.1.0 采用「内核 + 模块 + Hook」插件化架构。核心包 `sduthesis` 只负责引擎、Hook 与基础排版，学位类型相关逻辑（封面 / 盲审）由独立的模块承载：
+SDUTeX 采用「内核 + 模块 + Hook」插件化架构。核心 `sduthesis.cls` 只负责引擎、Hook 与基础排版，学位类型相关逻辑（封面 / 摘要 / 页眉页脚）由独立模块承载：
 
-| 模块文件 | 对应学位类型 |
-|----------|------------|
-| `sduthesis-undergraduate.sty` | 本科 |
-| `sduthesis-master.sty` | 硕士 / 专业硕士 |
-| `sduthesis-doctor.sty` | 博士 |
-| `sduthesis-blindreview.sty` | 盲审 |
+| 模块文件 | 用途 |
+|----------|------|
+| `sduthesis-undergraduate.sty` | 本科论文模块 |
+| `sduthesis-master.sty` | 硕士学位论文模块（硕博封面 + 答辩委员会页） |
+| `sduthesis-blindreview.sty` | 盲审模块 |
 
 ### 组合加载 `module=`
 
-通过 `\SDUSetup{ module = {...} }` 可自由组合模块，模块会在 `\begin{document}` 时自动加载：
+通过 `\SDUSetup{ module = {...} }` 自由组合模块，模块在 `\begin{document}` 时自动加载：
 
 ```latex
-\documentclass{sduthesis}
-
 \SDUSetup{
   module = {master, blindreview},   % 硕士 + 盲审
-  title = {...},
-  ...
+  info = {...},
 }
 ```
 
+> 盲审模块单独使用时，内核会自动前置加载本科模块。
+
 ### 内置 Hook
 
-内核提供 6 个命名 Hook 供扩展：`after-setup`、`before-cover`、`cover-style`、`frontmatter/begin`、`mainmatter/begin`、`backmatter/begin`。
+内核提供 6 个命名 Hook 供模块/用户扩展：
+`sduthesis/after-setup`、`sduthesis/before-cover`、`sduthesis/cover-style`、`sduthesis/frontmatter/begin`、`sduthesis/mainmatter/begin`、`sduthesis/backmatter/begin`。
 
-## 旧式命令兼容
-
-为了向后兼容，以下旧式命令仍可使用（推荐使用 `\SDUSetup` 现代化接口）：
-
-| 旧式命令 | 等价新写法 | 说明 |
-|----------|-----------|------|
-| `\title{...}` | `\SDUSetup{title={...}}` | 中文标题 |
-| `\title*{...}` | `\SDUSetup{title*={...}}` | 英文标题 |
-| `\author{...}` | `\SDUSetup{author={...}}` | 作者 |
-| `\author*{...}` | `\SDUSetup{author*={...}}` | 英文作者 |
-| `\degree{...}` | 文档类选项 `degree=` | 学位类型 |
-| `\school{...}` | `\SDUSetup{school={...}}` | 学院 |
-| `\major{...}` | `\SDUSetup{major={...}}` | 专业 |
-| `\supervisor{...}` | `\SDUSetup{supervisor={...}}` | 导师 |
-| `\date{...}` | `\SDUSetup{date={...}}` | 日期 |
-| `\studentid{...}` | `\SDUSetup{student-id={...}}` | 学号 |
-| `\makecover` | `\MakeCover` | 生成封面（小写已弃用） |
-| `\makedeclaration` | `\MakeDeclaration` | 生成声明页（小写已弃用） |
-| `\language{...}` | 无（按内容自动判断） | 已弃用，保留以兼容旧文档 |
-
-> **注意**：旧式命令（除 `\makecover`/`\makedeclaration` 外）已标记为**弃用**，新文档请统一使用 `\SDUSetup` + `\MakeCover`/`\MakeDeclaration` 现代化接口。
+模块通过 `\AddToHook{...}{...}` 注入行为。
 
 ## 目录结构
 
 ```
 sdutex/
 ├── src/                    # 源代码
-│   ├── sduthesis.dtx       # 论文文档类
+│   ├── sduthesis.dtx       # 论文文档类（内核）
 │   ├── sduthesis.ins       # 安装脚本
-│   ├── sdutex.sty         # 工具宏包
+│   ├── sdutex.sty          # 工具宏包
 │   └── sduthesis.bst       # 参考文献样式
-├── test/                   # 测试用例
+├── modules/                # 插件模块
+│   ├── sduthesis-undergraduate.sty
+│   ├── sduthesis-master.sty
+│   └── sduthesis-blindreview.sty
+├── test/                   # l3build 回归测试（.tex/.tlg）
 ├── doc/                    # 开发者文档
 ├── Makefile
-├── build.lua              # l3build 配置
+├── build.lua               # l3build 配置
 └── README.md
 ```
 
@@ -249,9 +161,10 @@ sdutex/
 
 | 命令 | 说明 |
 |------|------|
-| `make` | 解包并生成文件 |
-| `make test` | 运行测试 |
+| `make` | 运行 l3build 回归测试 |
+| `make test` | 运行测试（xetex + lualatex 双引擎） |
 | `make install` | 安装到本地 |
+| `make ctan` | 生成 CTAN 发布包 |
 | `make clean` | 清理生成的文件 |
 
 使用 l3build：
@@ -267,7 +180,7 @@ l3build ctan      # 打包 CTAN
 
 | 项目 | 说明 |
 |------|------|
-| [sduthesis](https://github.com/h1s97x/sduthesis) | 示例模板仓库 |
+| [sduthesis](https://github.com/h1s97x/sduthesis) | 示例模板仓库（用户使用入口） |
 | [sdubeamer](https://github.com/h1s97x/sdubeamer) | Beamer 幻灯片模板 |
 
 ## 文档

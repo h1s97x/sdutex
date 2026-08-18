@@ -17,6 +17,7 @@
 build/
 tlpkg/build/
 *.pdf
+!figures/logos/*.pdf
 
 # 测试输出
 test/*.aux
