@@ -36,12 +36,14 @@ jobs:
           package-file: .github/tl_packages
 
       - name: Run tests
+        # 运行 l3build 回归测试套件（.tex/.tlg，xetex/luatex 双引擎），
+        # 对齐 sduthesis 的 CI 设计，由 l3build 统一负责解包、TDS 布局与测试编译。
         run: make test
 
-      - name: Upload logs on failure
+      - name: Upload test diffs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-logs
-          path: build/test/*.log
+          name: test-diffs
+          path: build/test*/*.diff
           if-no-files-found: warn

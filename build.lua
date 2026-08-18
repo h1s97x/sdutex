@@ -71,9 +71,10 @@ stdengine = "xetex"
 checkopts = "-file-line-error -halt-on-error -interaction=nonstopmode"
 
 -- 忽略某些测试：
--- smoke.tex 由 `make test` 单独承担（解包 + xelatex 综合编译），
+-- smoke.tex 为整篇论文的端到端编译示例，无 .tlg 基线，不参与回归对比；
+-- 其覆盖的封面/摘要/目录/附录等能力已由 cover/abstract/toc/appendix 等回归用例覆盖。
 -- nested-setup.tex 为 setup-test 的组合支撑文件，二者均非独立回归用例，
--- 且无 .tlg 基线，若不排除会导致 `l3build check`（make test-l3）因缺基线而失败。
+-- 若不排除会导致 `l3build check` 因缺基线而失败。
 excludetests = {"smoke", "nested-setup"}
 
 -- 测试文件目录

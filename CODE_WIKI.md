@@ -754,8 +754,8 @@ sduthesis-blindreview.sty
 |------|------|-------------|
 | `make all` (默认) | = `make test` | - |
 | `make unpack` | 解包 DTX 生成 .cls/.sty/.bst,复制到 build/ | `l3build unpack` |
-| `make test` | CI 门禁:解包 + 编译 smoke.tex 综合验证 | -(自建验证) |
-| `make test-l3` | l3build 回归测试(.tex/.tlg) | `l3build check` |
+| `make test` | CI 门禁:l3build 回归测试(.tex/.tlg,双引擎) | `l3build check` |
+| `make test-l3` | (已并入 `make test`) | `l3build check` |
 | `make install` | 安装到用户目录 `~/texmf/tex/latex/sdutex/`,运行 texhash | `l3build install` |
 | `make ctan` | 生成 CTAN 发布包 sdutex-ctan.zip | `l3build ctan` |
 | `make clean` | 删除 build/、test/build/、tlpkg/、src/*.cls、src/*.sty、日志等 | `l3build clean` + 自定义 |
@@ -831,7 +831,7 @@ SDUTeX 采用 **l3build 回归测试体系**（`.tex` 测试文件 + `.tlg` 基�
 │    产生可对比的 .tlg 基线                    │
 │  · xetex + luatex 双引擎                    │
 │  · 对比实际日志与预期基线,逐行比对           │
-│  · 命令:l3build check / make test-l3        │
+│  · 命令:l3build check / make test          │
 └────────────────────────────────────────────┘
 ```
 
@@ -853,17 +853,23 @@ SDUTeX 采用 **l3build 回归测试体系**（`.tex` 测试文件 + `.tlg` 基�
 
 ### 11.2 CI 门禁测试（make test）
 
-`make test` 为 CI 门禁，解包 DTX 并编译综合验证文件 `test/smoke.tex`（验证核心功能可编译），不依赖严格的基线对比：
+`make test` 为 CI 门禁，直接运行 l3build 回归测试套件（`.tex/.tlg`，xetex/luatex 双引擎），对齐 sduthesis 的 CI 设计，由 l3build 统一负责解包、TDS 布局与测试编译，避免手工维护解包/拷贝步骤导致反复修补缺失宏包的脆弱逻辑：
 
 ```bash
 make test
-  → 解包 sduthesis.dtx → sduthesis.cls
-  → 复制 cls/sty/bst/modules/figures 到 build/test/
-  → xelatex 编译 smoke.tex
-  → 成功生成 smoke.pdf 则通过
+  → l3build check
+  → 自动解包 DTX
+  → 对 xetex 和 luatex 引擎分别执行:
+       对每个测试文件运行编译
+       收集 .log 输出
+       与对应的 .tlg 基线逐行比对
+       差异 → FAIL
 ```
 
-### 11.3 回归测试执行流程（可选）
+> `test/smoke.tex` 为整篇论文的端到端编译示例，无 `.tlg` 基线，不参与回归对比；
+> 其覆盖的封面/摘要/目录/附录等能力已由 `cover/abstract/toc/appendix` 等回归用例覆盖。
+
+### 11.3 回归测试执行细节
 
 ```bash
 l3build check
@@ -890,8 +896,8 @@ l3build check
 **执行步骤**:
 1. `actions/checkout@v4` - 检出代码
 2. `TeX-Live/setup-texlive-action@v4` - 安装 TeX Live,包清单来自 `.github/tl_packages`
-3. `make test` - 解包 + 编译 smoke.tex 综合验证
-4. 失败时上传日志 Artifact:`build/test/*.log`(`actions/upload-artifact@v4`)
+3. `make test` - 运行 l3build 回归测试套件（xetex/luatex 双引擎）
+4. 失败时上传差异 Artifact:`build/test*/*.diff`(`actions/upload-artifact@v4`)
 
 #### 12.1.2 发布流水线 (release.yml)
 
@@ -940,8 +946,7 @@ make install    # 或 l3build install
 
 ```bash
 # 运行测试套件
-make test         # CI 门禁:解包 + 编译 smoke.tex 综合验证
-make test-l3      # l3build 回归测试(.tex/.tlg)
+make test         # CI 门禁:l3build 回归测试(.tex/.tlg,双引擎)
 ```
 
 ### 13.4 用户论文项目最小示例

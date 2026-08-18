@@ -1,7 +1,7 @@
 # SDUTeX Makefile
 # 山东大学 LaTeX 论文模板核心包
 
-.PHONY: all test test-l3 unpack clean install ctan manual help
+.PHONY: all test unpack clean install ctan manual help
 
 # 默认目标
 all: test
@@ -14,37 +14,18 @@ unpack:
 	@mv src/sduthesis.cls build/ 2>/dev/null || true
 	@echo "解包完成"
 
-# CI 门禁测试：解包 + 编译综合验证（smoke test），保证核心包可解包、可编译
+# CI 门禁测试：运行 l3build 回归测试套件（.tex/.tlg，xetex/luatex 双引擎），
+# 对齐 sduthesis 的设计。l3build 负责解包、TDS 布局与测试编译，
+# 无需手工维护解包/拷贝步骤，避免反复修补缺失宏包的脆弱逻辑。
 test:
-	@echo "=== 解包 DTX ==="
-	@mkdir -p build/test/modules
-	@cd src && latex sduthesis.ins
-	@cp src/sduthesis.cls build/test/
-	@cp src/sdutex.sty src/sduthesis.bst build/test/ 2>/dev/null || true
-	@cp modules/*.sty build/test/modules/ 2>/dev/null || true
-	@cp -r figures build/test/ 2>/dev/null || true
-	@cp test/smoke.tex build/test/
-	@echo "=== 编译综合验证 (xelatex) ==="
-	@cd build/test && export TEXINPUTS=".:modules//:" && \
-	xelatex -interaction=nonstopmode -halt-on-error smoke.tex > /dev/null 2>&1; \
-	if [ -s smoke.pdf ]; then \
-		echo "OK: smoke.tex 编译成功，生成 smoke.pdf"; \
-	else \
-		echo "失败: smoke.tex 编译失败"; \
-		tail -40 smoke.log; \
-		exit 1; \
-	fi
-	@echo "测试通过"
-
-# l3build 回归测试（.tex/.tlg，xetex/luatex 双引擎，可选）
-test-l3:
-	@echo "运行 l3build 回归测试..."
+	@echo "=== 运行 l3build 回归测试 (xetex/luatex 双引擎) ==="
 	@if command -v l3build > /dev/null 2>&1; then \
 		l3build check; \
 	else \
 		echo "l3build 不可用，请安装 TeX Live 或 l3build"; \
 		exit 1; \
 	fi
+	@echo "测试通过"
 
 # 安装到用户目录
 install:
@@ -91,8 +72,7 @@ help:
 	@echo ""
 	@echo "用法:"
 	@echo "  make unpack    解包 DTX 文件生成 .cls"
-	@echo "  make test      解包 + 编译综合验证（CI 门禁）"
-	@echo "  make test-l3   运行 l3build 回归测试（可选）"
+	@echo "  make test      运行 l3build 回归测试（CI 门禁，xetex/luatex 双引擎）"
 	@echo "  make install   安装到用户 TeX 目录"
 	@echo "  make ctan      生成 CTAN 发布包"
 	@echo "  make clean     清理生成的文件"
