@@ -48,16 +48,19 @@ ctan:
 	@echo "CTAN 包已生成: sdutex-ctan.zip"
 
 # 编译中文使用手册（由 dtx 文档化内容生成）
-# 用 xelatex：dtx driver 的 ctex 使用 fandol（OpenType）字体，pdflatex 不支持 OpenType
-# 字体会报 "CTeX fontset `fandol' is unavailable"。xelatex 支持 OpenType，可正常排版中文。
-# TEXINPUTS=../src: 让 dtx 内的 \DocInput{sduthesis.dtx} 能找到 src 下的源文件。
+# 注意：dtx 的 driver 用 \DocInput{sduthesis.dtx} 自引用自身，
+# 若在 build/ 下直接 xelatex ../src/sduthesis.dtx，\DocInput 会在当前目录
+# （build/）找不到 sduthesis.dtx 而报 `File 'sduthesis.dtx' not found`。
+# 故先把 dtx 复制进 build/ 再于 build/ 内编译（与 sduthesis 流水线 cd src 后
+# xelatex sduthesis.dtx 的做法等价）。
 manual:
-	@echo "编译中文使用手册（xelatex，由 sduthesis.dtx 文档化内容生成）..."
+	@echo "编译中文使用手册（由 sduthesis.dtx 文档化内容生成）..."
 	@mkdir -p build
-	cd build && TEXINPUTS=../src: xelatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	cp src/sduthesis.dtx build/
+	cd build && xelatex -interaction=nonstopmode -halt-on-error sduthesis.dtx
 	cd build && makeindex -s gind.ist -o sduthesis.ind sduthesis.idx 2>/dev/null || true
 	cd build && makeindex -s gglo.ist -o sduthesis.gls sduthesis.glo 2>/dev/null || true
-	cd build && TEXINPUTS=../src: xelatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	cd build && xelatex -interaction=nonstopmode -halt-on-error sduthesis.dtx
 	@ls -la build/sduthesis.pdf
 	@echo "使用手册已生成: build/sduthesis.pdf"
 
