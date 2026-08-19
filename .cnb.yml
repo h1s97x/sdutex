@@ -96,13 +96,17 @@ $:
             cnb issues add-assignees --assignees $ISSUE_ASSIGNEE
 
   # Tag 发布：构建 CTAN 发布包 + 编译使用手册 PDF + 创建 Release（v* tag 触发）
+  # CTAN 包用 l3build ctan 生成（符合 CTAN 规范，可进入 TeX Live），而非 Makefile 手工 zip。
   tag_push:
     - name: release
       docker:
         image: texlive/texlive:latest
       stages:
         - name: build ctan
-          script: make ctan
+          script: |
+            set -e
+            l3build ctan
+            ls -la sdutex-ctan.zip
         - name: build manual
           script: make manual
         - name: create release
