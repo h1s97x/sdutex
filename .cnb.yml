@@ -68,11 +68,12 @@ $:
         - name: run make manual
           script: |
             set -e
-            # 与 tag_push 的 build manual 保持一致：texlive 镜像默认不含 fandol，
-            # 先安装中文字体再编译手册，确保发布闭环的 build manual 可跑通。
-            tlmgr install fandol
+            # Fandol 已预装于 texlive/texlive 镜像（TeX Live 自带，见 sduthesis.dtx 注释）；
+            # 无需 tlmgr 联网安装——tlmgr 更新 tlpdb 时默认仓库含不可达的 tlcontrib
+            # (contrib.texlive.info) 会导致 install 失败，故直接编译，与 tag_push 的
+            # build manual 保持一致；若 fandol 真缺失，make manual 的 xelatex 会以
+            # "FandolSong cannot be found" 明确报错兜底。
             make manual
-            ls -la build/sduthesis.pdf
 
   # 手动触发：从 GitHub 拉取（GitHub → CNB）
   # 使用官方 tencentcom/git-sync 插件 + sync_mode: pull，按钮见 .cnb/web_trigger.yml
@@ -118,9 +119,11 @@ $:
         - name: build manual
           script: |
             set -e
-            # texlive 镜像默认不含 fandol 中文字体，导致 ctex 编译手册时报
-            # "CTeX fontset `fandol' is unavailable"，需先用 tlmgr 安装。
-            tlmgr install fandol
+            # Fandol 已预装于 texlive/texlive 镜像（TeX Live 自带，见 sduthesis.dtx 注释），
+            # 无需 tlmgr 联网安装——tlmgr 更新 tlpdb 时默认仓库含不可达的 tlcontrib
+            # (contrib.texlive.info) 会导致 install 失败，故直接编译；
+            # 若 fandol 真缺失，make manual 的 xelatex 会以 "FandolSong cannot be found"
+            # 明确报错兜底。
             make manual
         - name: create release
           type: git:release
