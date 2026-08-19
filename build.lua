@@ -48,13 +48,6 @@ docfiles = {
   "doc",
 }
 
--- 跳过 doc（typeset）编译阶段。
--- dtx 的 driver 用 l3doc + listings 排版，但 \begin{lstlisting}[language={[LaTeX]TeX}]
--- 内的模板代码（含 \AddToHook{...}{% ...} 等 LaTeX3 语法）无法被 listings 正确解析，
--- 导致 l3build ctan 的 doc 阶段编译必然失败（见 PR #26 同类问题）。
--- CTAN 包仅需 cls/sty/bst 等实现文件 + 随包 doc 资源，故清空 typesetfiles 跳过 doc 编译。
-typesetfiles = {}
-
 -- 构建产物打包成 .tds.zip
 packtdszip = true
 
