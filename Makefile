@@ -51,10 +51,10 @@ ctan:
 manual:
 	@echo "编译中文使用手册（由 sduthesis.dtx 文档化内容生成）..."
 	@mkdir -p build
-	cd build && pdflatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	cd build && xelatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
 	cd build && makeindex -s gind.ist -o sduthesis.ind sduthesis.idx 2>/dev/null || true
 	cd build && makeindex -s gglo.ist -o sduthesis.gls sduthesis.glo 2>/dev/null || true
-	cd build && pdflatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
+	cd build && xelatex -interaction=nonstopmode -halt-on-error ../src/sduthesis.dtx
 	@ls -la build/sduthesis.pdf
 	@echo "使用手册已生成: build/sduthesis.pdf"
 

@@ -48,6 +48,13 @@ docfiles = {
   "doc",
 }
 
+-- 文档（typeset）编译用 XeTeX 引擎。
+-- dtx 的 driver 用 l3doc + ctex（默认 fandol 字体集）排版，fandol 是 OpenType 字体，
+-- 只在 XeTeX/LuaTeX 下可用；l3build 默认 typeset 走 pdflatex，会报
+-- `CTeX fontset 'fandol' is unavailable in current mode` 而失败（见 v2.2.0 发布日志）。
+-- 与 sduthesis 流水线用 `xelatex sduthesis.dtx` 编译文档保持一致。
+typesetexe = "xelatex"
+
 -- 构建产物打包成 .tds.zip
 packtdszip = true
 
