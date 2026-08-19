@@ -108,7 +108,12 @@ $:
             l3build ctan
             ls -la sdutex-ctan.zip
         - name: build manual
-          script: make manual
+          script: |
+            set -e
+            # texlive 镜像默认不含 fandol 中文字体，导致 ctex 编译手册时报
+            # "CTeX fontset `fandol' is unavailable"，需先用 tlmgr 安装。
+            tlmgr install fandol
+            make manual
         - name: create release
           type: git:release
           options:
